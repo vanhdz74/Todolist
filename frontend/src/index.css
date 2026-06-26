@@ -1,4 +1,10 @@
-/* src/index.css */
+@import "tailwindcss";
+
+/* DARK MODE */
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* RESET */
 
 * {
   box-sizing: border-box;
@@ -7,16 +13,119 @@
 }
 
 html,
-body {
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  /* Ẩn thanh cuộn tổng của trình duyệt vì chúng ta đã có thanh cuộn riêng trong Main Content */
-  overflow: hidden;
-}
-
+body,
 #root {
   width: 100%;
   height: 100%;
+}
+
+body {
+  font-family: "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+
+  overflow: hidden;
+
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+/* =========================
+   LIGHT THEME
+========================= */
+
+:root {
+  /* Brand Microsoft Blue */
+
+  --primary: #2564cf;
+  --primary-hover: #1f55b5;
+
+  /* Background */
+
+  --bg-app: #f3f2f1;
+  --bg-surface: #ffffff;
+  --bg-sidebar: #ffffff;
+  --bg-hover: #f5f5f5;
+
+  /* Text */
+
+  --text-main: #323130;
+  --text-secondary: #605e5c;
+  --text-disabled: #a19f9d;
+
+  /* Border */
+
+  --border: #edebe9;
+
+  /* Task */
+
+  --task-complete: #107c10;
+  --task-important: #e33e5a;
+
+  /* Shadow */
+
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+/* =========================
+   DARK THEME
+========================= */
+
+.dark {
+  --bg-app: #1f1f1f;
+
+  --bg-surface: #252525;
+
+  --bg-sidebar: #202020;
+
+  --bg-hover: #333333;
+
+  --text-main: #ffffff;
+
+  --text-secondary: #d2d0ce;
+
+  --text-disabled: #858585;
+
+  --border: #3b3a39;
+
+  --primary: #4f8cff;
+
+  --primary-hover: #6aa0ff;
+
+  --shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* =========================
+   BODY
+========================= */
+
+body {
+  background: var(--bg-app);
+
+  color: var(--text-main);
+}
+
+/* =========================
+   SCROLLBAR
+========================= */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+
+  border-radius: 8px;
+}
+
+/* =========================
+   COMMON
+========================= */
+
+.card {
+  background: var(--bg-surface);
+
+  border: 1px solid var(--border);
+
+  box-shadow: var(--shadow);
 }
