@@ -1,11 +1,4 @@
-import {
-  SunOutlined,
-  StarOutlined,
-  HomeOutlined,
-  CalendarOutlined,
-  UserOutlined,
-  PlusOutlined,
-} from "@ant-design/icons";
+import { PlusOutlined } from "@ant-design/icons";
 
 import { Menu } from "antd";
 
@@ -13,43 +6,27 @@ import type { MenuProps } from "antd";
 
 import { useLocation, useNavigate } from "react-router-dom";
 
+import { todoLists } from "@/constants/todoLists";
+
 export default function SidebarMenu() {
   const navigate = useNavigate();
 
   const location = useLocation();
 
+  const smartLists = todoLists.filter((list) => list.group === "smart");
+  const customLists = todoLists.filter((list) => list.group === "custom");
+
   const items: MenuProps["items"] = [
-    {
-      key: "/my-day",
-      icon: <SunOutlined className="text-[var(--primary)]" />,
-      label: "My Day",
-    },
+    ...smartLists.map((list) => ({
+      key: list.path,
+      icon: (
+        <span className={list.accentClassName}>
+          {list.icon}
+        </span>
+      ),
+      label: list.title,
+    })),
 
-    {
-      key: "/important",
-      icon: <StarOutlined className="text-[var(--task-important)]" />,
-      label: "Important",
-    },
-
-    {
-      key: "/planned",
-      icon: <CalendarOutlined />,
-      label: "Planned",
-    },
-
-    {
-      key: "/assigned",
-      icon: <UserOutlined />,
-      label: "Assigned to me",
-    },
-
-    {
-      key: "/tasks",
-      icon: <HomeOutlined />,
-      label: "Tasks",
-    },
-
-    // Divider đúng type
     {
       type: "divider",
     },
@@ -57,18 +34,16 @@ export default function SidebarMenu() {
     {
       key: "lists",
       label: "My Lists",
-
       children: [
-        {
-          key: "/personal",
-          label: "Personal",
-        },
-
-        {
-          key: "/work",
-          label: "Work",
-        },
-
+        ...customLists.map((list) => ({
+          key: list.path,
+          icon: (
+            <span className={list.accentClassName}>
+              {list.icon}
+            </span>
+          ),
+          label: list.title,
+        })),
         {
           key: "create-list",
           icon: <PlusOutlined />,

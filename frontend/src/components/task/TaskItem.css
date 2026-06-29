@@ -1,0 +1,285 @@
+/* =========================
+   MICROSOFT TO DO TASK ROW
+========================= */
+
+.task-item {
+  --task-grid-columns: 40px minmax(360px, 560px) 170px 160px minmax(0, 1fr);
+  --todo-red: #d13438;
+  --todo-text: #323130;
+  --todo-muted: #605e5c;
+  --todo-border: #f3f2f1;
+  --todo-hover-border: #c8c6c4;
+  --todo-hover-bg: #faf9f8;
+
+  display: grid;
+  grid-template-columns: var(--task-grid-columns);
+  align-items: center;
+
+  min-height: 42px;
+  padding: 0 12px;
+
+  background: #ffffff;
+  color: var(--todo-text);
+  border-bottom: 1px solid var(--todo-border);
+
+  user-select: none;
+}
+
+/* Không hover chung cả row nữa */
+.task-item:hover {
+  background: #ffffff;
+}
+
+/* =========================
+   CHECKBOX CELL
+========================= */
+
+.task-item__check-cell {
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+
+  padding: 0 8px;
+
+  border: 1px solid transparent;
+  background: transparent;
+}
+
+.task-item__check-cell:hover {
+  background: var(--todo-hover-bg);
+  border-color: var(--todo-hover-border);
+}
+
+.task-item__check-cell:focus-within {
+  background: #ffffff;
+  border-color: var(--todo-red);
+}
+
+.task-item .ant-checkbox .ant-checkbox-inner {
+  width: 16px !important;
+  height: 16px !important;
+
+  border-radius: 999px !important;
+  border-color: var(--todo-red) !important;
+  background: #ffffff;
+}
+
+.task-item .ant-checkbox:hover .ant-checkbox-inner {
+  border-color: var(--todo-red) !important;
+}
+
+.task-item .ant-checkbox-checked .ant-checkbox-inner {
+  background: var(--todo-red) !important;
+  border-color: var(--todo-red) !important;
+}
+
+.task-item .ant-checkbox-checked::after {
+  border-color: var(--todo-red) !important;
+  border-radius: 999px !important;
+}
+
+/* =========================
+   TITLE CELL
+========================= */
+
+.task-item__title-cell {
+  min-width: 0;
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 0 12px;
+
+  border: 1px solid transparent;
+  background: transparent;
+}
+
+.task-item__title-cell:hover {
+  background: var(--todo-hover-bg);
+  border-color: var(--todo-hover-border);
+}
+
+.task-item__title-cell:focus-within,
+.task-item.is-selected .task-item__title-cell {
+  background: #ffffff;
+  border-color: var(--todo-red);
+}
+
+.task-item__title {
+  min-width: 0;
+  flex: 1;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  color: var(--todo-text);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.task-item.is-completed .task-item__title {
+  color: #8a8886;
+  text-decoration: line-through;
+}
+
+/* Nút ! / info mở chi tiết */
+.task-item__detail-button {
+  flex: none;
+
+  width: 28px;
+  height: 28px;
+
+  color: var(--todo-red) !important;
+  opacity: 0;
+
+  transition:
+    opacity 0.14s ease,
+    background-color 0.14s ease,
+    transform 0.14s ease;
+}
+
+.task-item__title-cell:hover .task-item__detail-button,
+.task-item__title-cell:focus-within .task-item__detail-button,
+.task-item.is-selected .task-item__detail-button {
+  opacity: 1;
+}
+
+.task-item__detail-button:hover {
+  background: #fde7e9 !important;
+  transform: scale(1.04);
+}
+
+/* =========================
+   DUE DATE CELL
+========================= */
+
+.task-item__due-cell {
+  position: relative;
+
+  height: 36px;
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+
+  padding: 0 12px;
+
+  border: 1px solid transparent;
+  background: transparent;
+
+  color: var(--todo-text);
+  font-size: 13px;
+}
+
+.task-item__due-cell:hover {
+  background: var(--todo-hover-bg);
+  border-color: var(--todo-hover-border);
+}
+
+.task-item__due-cell:focus-within {
+  background: #ffffff;
+  border-color: var(--todo-red);
+}
+
+.task-item__due-label {
+  display: inline-flex;
+  align-items: center;
+
+  min-height: 28px;
+
+  color: var(--todo-text);
+  font-size: 13px;
+}
+
+.task-item__date-picker {
+  position: absolute;
+  left: 4px;
+  top: 50%;
+
+  width: 145px;
+
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.task-item__due-cell:hover .task-item__due-label,
+.task-item__due-cell:focus-within .task-item__due-label {
+  opacity: 0;
+}
+
+.task-item__due-cell:hover .task-item__date-picker,
+.task-item__due-cell:focus-within .task-item__date-picker {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* =========================
+   IMPORTANCE CELL
+========================= */
+
+.task-item__importance-cell {
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+
+  padding: 0 12px;
+
+  border: 1px solid transparent;
+  background: transparent;
+}
+
+.task-item__importance-cell:hover {
+  background: var(--todo-hover-bg);
+  border-color: var(--todo-hover-border);
+}
+
+.task-item__importance-cell:focus-within {
+  background: #ffffff;
+  border-color: var(--todo-red);
+}
+
+.task-item__star-button {
+  width: 28px;
+  height: 28px;
+
+  color: var(--todo-red) !important;
+}
+
+.task-item__star-button:hover,
+.task-item__star-button[aria-expanded="true"] {
+  background: #fde7e9 !important;
+}
+
+.task-item__star-icon,
+.task-item__star-icon.is-important,
+.task-item__menu-star.is-important {
+  color: var(--todo-red);
+  font-size: 16px;
+}
+
+.task-item__empty-cell {
+  min-width: 0;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 900px) {
+  .task-item {
+    --task-grid-columns: 40px minmax(180px, 1fr) 130px 90px;
+  }
+
+  .task-item__empty-cell {
+    display: none;
+  }
+}

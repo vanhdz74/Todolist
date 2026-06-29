@@ -3,11 +3,9 @@ import {
   MoonOutlined,
   SunOutlined,
   SettingOutlined,
-  LogoutOutlined,
-  UserOutlined,
 } from "@ant-design/icons";
 
-import { Button, Space, Tooltip, Dropdown, Avatar } from "antd";
+import { Button, Space, Tooltip } from "antd";
 
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
@@ -39,27 +37,6 @@ export default function HeaderActions() {
 
     document.documentElement.classList.toggle("dark");
   };
-
-  const items = [
-    {
-      key: "profile",
-      label: user?.fullName || "Profile",
-      icon: <UserOutlined />,
-    },
-
-    {
-      key: "email",
-      label: user?.primaryEmailAddress?.emailAddress,
-    },
-
-    {
-      key: "logout",
-      label: "Đăng xuất",
-      icon: <LogoutOutlined />,
-      danger: true,
-      onClick: handleLogout,
-    },
-  ];
 
   return (
     <>

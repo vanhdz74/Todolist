@@ -2,10 +2,8 @@ import { getTodoListByKey } from "@/constants/todoLists";
 
 import TaskCollectionPage from "./TaskCollectionPage";
 
-export const TasksPage = () => {
-  // Chọn key của sidebar
-  const list = getTodoListByKey("tasks");
+export const AssignedPage = () => {
+  const list = getTodoListByKey("assigned");
 
-  // Lấy list tương ứng
   return list ? <TaskCollectionPage list={list} /> : null;
 };

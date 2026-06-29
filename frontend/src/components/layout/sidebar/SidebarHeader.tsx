@@ -2,7 +2,12 @@ import { MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
 
 import { Button } from "antd";
 
-export default function SidebarHeader({ collapsed, setCollapsed }) {
+type Props = {
+  collapsed: boolean;
+  setCollapsed: (collapsed: boolean) => void;
+};
+
+export default function SidebarHeader({ collapsed, setCollapsed }: Props) {
   return (
     <div
       className="

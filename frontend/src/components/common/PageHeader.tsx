@@ -1,120 +1,43 @@
-import { Segmented, Space, Button } from "antd";
+import { Space } from "antd";
 
-import { AppstoreOutlined, BarsOutlined } from "@ant-design/icons";
+import TaskViewSwitch from "@/components/task/TaskViewSwitch";
 
 type Props = {
   icon: React.ReactNode;
-
+  iconClassName?: string;
   title: string;
-
   subtitle?: string;
-
   viewMode: "grid" | "list";
-
   setViewMode: (value: "grid" | "list") => void;
-
   actions?: React.ReactNode;
 };
 
+// Header trang (dùng )
 export default function PageHeader({
   icon,
-
+  iconClassName,
   title,
-
   subtitle,
-
   viewMode,
-
   setViewMode,
-
   actions,
 }: Props) {
   return (
-    <div
-      style={{
-        display: "flex",
-
-        justifyContent: "space-between",
-
-        alignItems: "flex-start",
-
-        marginBottom: 24,
-      }}
-    >
+    <div className="mt-1! mb-10! flex items-start justify-between">
       <div>
-        <div
-          style={{
-            display: "flex",
+        <div className="flex items-center gap-3">
+          <div className={`flex text-2xl ${iconClassName ?? ""}`}>{icon}</div>
 
-            alignItems: "center",
-
-            gap: 12,
-          }}
-        >
-          <div>{icon}</div>
-
-          <h2
-            style={{
-              margin: 0,
-
-              display: "flex",
-
-              alignItems: "center",
-
-              gap: 6,
-
-              fontSize: 24,
-            }}
-          >
+          <h2 className="m-0 flex items-center gap-1.5 text-2xl">
             {title}
-
-            <span
-              style={{
-                color: "#8c8c8c",
-
-                fontSize: 20,
-              }}
-            >
-              ...
-            </span>
+            <span className="text-xl text-[#8c8c8c]">...</span>
           </h2>
 
-          <Segmented
-            size="large"
-            value={viewMode}
-            onChange={(value) => setViewMode(value as "grid" | "list")}
-            options={[
-              {
-                label: "Grid",
-
-                value: "grid",
-
-                icon: <AppstoreOutlined />,
-              },
-
-              {
-                label: "List",
-
-                value: "list",
-
-                icon: <BarsOutlined />,
-              },
-            ]}
-          />
+          <TaskViewSwitch value={viewMode} onChange={setViewMode} />
         </div>
 
         {subtitle && (
-          <div
-            style={{
-              marginTop: 4,
-
-              color: "#605e5c",
-
-              fontSize: 12,
-            }}
-          >
-            {subtitle}
-          </div>
+          <div className="mt-2! text-xs text-[#605e5c]">{subtitle}</div>
         )}
       </div>
 

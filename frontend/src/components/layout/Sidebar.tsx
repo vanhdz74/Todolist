@@ -37,10 +37,10 @@ export default function Sidebar() {
             overflow-auto
           "
         >
-          <SidebarMenu collapsed={collapsed} />
+          <SidebarMenu />
         </div>
 
-        <SidebarFooter collapsed={collapsed} />
+        <SidebarFooter />
       </div>
     </Sider>
   );

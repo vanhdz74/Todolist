@@ -16,48 +16,17 @@ type Props = {
 export default function AddTaskBox({ onAdd }: Props) {
   const [title, setTitle] = useState("");
 
+  // Xử lý thêm task
   const handleAdd = () => {
     if (!title.trim()) return;
-
     onAdd?.(title);
-
     setTitle("");
   };
 
   return (
-    <div
-      style={{
-        background: "#fff",
-
-        borderRadius: 4,
-
-        border: "1px solid #edebe9",
-
-        overflow: "hidden",
-
-        marginBottom: 16,
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-
-          alignItems: "center",
-
-          padding: "12px 16px",
-
-          borderBottom: "1px solid #edebe9",
-        }}
-      >
-        <BorderOutlined
-          style={{
-            color: "#2564cf",
-
-            marginRight: 16,
-
-            fontSize: 18,
-          }}
-        />
+    <div className="mb-4! overflow-hidden rounded border border-[#edebe9] bg-white">
+      <div className="flex items-center border-b border-[#edebe9] px-4! py-3!">
+        <BorderOutlined className="mr-4! text-lg text-[#2564cf]" />
 
         <Input
           value={title}
@@ -68,24 +37,10 @@ export default function AddTaskBox({ onAdd }: Props) {
         />
       </div>
 
-      <div
-        style={{
-          display: "flex",
-
-          justifyContent: "space-between",
-
-          alignItems: "center",
-
-          padding: "8px 16px",
-
-          background: "#faf9f8",
-        }}
-      >
+      <div className="flex items-center justify-between bg-[#faf9f8] px-4! py-2!">
         <Space>
           <Button type="text" icon={<CalendarOutlined />} />
-
           <Button type="text" icon={<BellOutlined />} />
-
           <Button type="text" icon={<SyncOutlined />} />
         </Space>
 

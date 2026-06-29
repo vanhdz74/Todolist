@@ -5,11 +5,13 @@ import type { Task } from "@/types/task";
 interface TaskState {
   tasks: Task[];
   loading: boolean;
+  loaded: boolean;
 }
 
 const initialState: TaskState = {
   tasks: [],
   loading: false,
+  loaded: false,
 };
 
 // Slice chỉ tạo Action và Reducer.
@@ -23,6 +25,7 @@ const taskSlice = createSlice({
 
     getTasksSuccess(state, action: PayloadAction<Task[]>) {
       state.loading = false;
+      state.loaded = true;
       state.tasks = action.payload;
     },
 
