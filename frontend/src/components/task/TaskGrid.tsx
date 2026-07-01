@@ -2,10 +2,12 @@ import type { Task } from "../../types/task";
 
 import "./TaskGrid.css";
 import TaskSections from "./TaskSections";
+import type { TaskSectionGroup } from "./TaskSections";
 
 type Props = {
   data: Task[];
   loading: boolean;
+  groups?: TaskSectionGroup[];
   selectedTaskId?: number;
   onSelectTask: (task: Task) => void;
 };
@@ -13,6 +15,7 @@ type Props = {
 export default function TaskGrid({
   data,
   loading,
+  groups,
   selectedTaskId,
   onSelectTask,
 }: Props) {
@@ -26,13 +29,16 @@ export default function TaskGrid({
         <div />
       </div>
 
-      <TaskSections
-        data={data}
-        loading={loading}
-        variant="grid"
-        selectedTaskId={selectedTaskId}
-        onSelectTask={onSelectTask}
-      />
+      <div className="task-table__body">
+        <TaskSections
+          data={data}
+          loading={loading}
+          variant="grid"
+          groups={groups}
+          selectedTaskId={selectedTaskId}
+          onSelectTask={onSelectTask}
+        />
+      </div>
     </div>
   );
 }

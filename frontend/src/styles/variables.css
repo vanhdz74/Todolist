@@ -3,10 +3,11 @@
 ========================= */
 
 :root {
-  /* Brand Microsoft Blue */
+  /* Brand App Blue */
 
   --primary: #2564cf;
   --primary-hover: #1f55b5;
+  --text-on-primary: #ffffff;
 
   /* Background */
 
@@ -14,6 +15,10 @@
   --bg-surface: #ffffff;
   --bg-sidebar: #ffffff;
   --bg-hover: #f5f5f5;
+  --bg-selected: #e1dfdd;
+  --bg-input: #ffffff;
+  --bg-danger-soft: #fde7e9;
+  --bg-drop: #edf4ff;
 
   /* Text */
 
@@ -23,12 +28,16 @@
 
   /* Border */
 
-  --border: #edebe9;
+  --border: #f2efec;
+  --border-strong: #dddbd8;
+  --border-drop: #a6c8ff;
 
   /* Task */
 
   --task-complete: #107c10;
   --task-important: #e33e5a;
+  --danger: #d13438;
+  --assigned: #8764b8;
 
   /* Shadow */
 
@@ -47,6 +56,10 @@
   --bg-sidebar: #202020;
 
   --bg-hover: #333333;
+  --bg-selected: #3b3a39;
+  --bg-input: #2b2b2b;
+  --bg-danger-soft: #442326;
+  --bg-drop: #24364f;
 
   --text-main: #ffffff;
 
@@ -55,10 +68,18 @@
   --text-disabled: #858585;
 
   --border: #3b3a39;
+  --border-strong: #605e5c;
+  --border-drop: #4f8cff;
 
   --primary: #4f8cff;
 
   --primary-hover: #6aa0ff;
+  --text-on-primary: #ffffff;
+
+  --task-complete: #6ccb5f;
+  --task-important: #ff8aa0;
+  --danger: #ff8a8a;
+  --assigned: #b69cff;
 
   --shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
 }

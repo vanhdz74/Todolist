@@ -1,0 +1,202 @@
+.task-command-menu__item {
+  min-width: 150px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.task-command-menu__item .anticon {
+  color: var(--primary);
+  font-size: 12px;
+}
+
+.task-collection-page .task-command-button {
+  color: var(--primary) !important;
+}
+
+.task-collection-page .task-command-button:hover,
+.task-collection-page .task-command-button:focus-visible {
+  color: var(--primary) !important;
+  background: color-mix(in srgb, var(--primary) 10%, transparent) !important;
+}
+
+.task-collection-page .ant-segmented {
+  color: var(--primary) !important;
+}
+
+.task-collection-page .ant-segmented-item {
+  color: var(--primary) !important;
+}
+
+.task-collection-page .ant-segmented-item .anticon,
+.task-collection-page .ant-segmented-item-label {
+  color: inherit !important;
+}
+
+.task-collection-page .ant-segmented-item-selected {
+  color: var(--primary) !important;
+}
+
+.task-collection-page .ant-segmented-item-selected::after {
+  border-color: var(--primary) !important;
+}
+
+.ant-btn.is-filtered {
+  color: var(--primary) !important;
+  background: color-mix(in srgb, var(--primary) 12%, transparent) !important;
+}
+
+.add-task-box {
+  border-color: var(--border-strong) !important;
+}
+
+.add-task-box__main-icon {
+  color: var(--primary);
+}
+
+.add-task-box__input::placeholder,
+.add-task-box__input input::placeholder {
+  color: var(--primary) !important;
+}
+
+.add-task-box__actions .ant-btn {
+  color: var(--primary) !important;
+}
+
+.add-task-box__actions .ant-btn:hover,
+.add-task-box__actions .ant-btn:focus-visible {
+  background: color-mix(in srgb, var(--primary) 10%, transparent) !important;
+}
+
+.add-task-box__submit:not(:disabled) {
+  color: var(--primary) !important;
+  border-color: var(--primary) !important;
+}
+
+.add-task-box__submit:not(:disabled):hover,
+.add-task-box__submit:not(:disabled):focus-visible {
+  color: var(--primary) !important;
+  border-color: var(--primary) !important;
+  background: color-mix(in srgb, var(--primary) 8%, transparent) !important;
+}
+
+.task-sort-indicator {
+  min-height: 28px;
+  margin-top: -4px;
+  margin-bottom: 4px;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+
+  color: var(--text-main);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.task-sort-indicator__chevron {
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.task-sort-indicator .ant-btn {
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  padding: 0 !important;
+
+  color: var(--text-secondary) !important;
+}
+
+.list-options-trigger {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  padding: 0 !important;
+
+  color: var(--text-secondary) !important;
+}
+
+.list-options-menu .ant-dropdown-menu {
+  min-width: 200px;
+  padding: 0 !important;
+
+  border: 1px solid var(--border);
+  border-radius: 3px !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16) !important;
+}
+
+.list-options-menu .ant-dropdown-menu-item,
+.list-options-menu .ant-dropdown-menu-submenu-title {
+  min-height: 38px;
+  padding: 0 18px !important;
+
+  color: var(--text-main) !important;
+  font-size: 14px;
+}
+
+.list-options-menu .ant-dropdown-menu-item-danger {
+  color: var(--danger) !important;
+}
+
+.list-options-menu .ant-dropdown-menu-item-disabled {
+  cursor: default !important;
+  opacity: 1 !important;
+}
+
+.list-options-menu .ant-dropdown-menu-title-content {
+  min-width: 0;
+}
+
+.list-options-menu__heading {
+  height: 44px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: var(--text-main);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.list-options-menu__theme {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.list-options-menu__swatch {
+  width: 12px;
+  height: 12px;
+
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+}
+
+.task-section-group + .task-section-group {
+  margin-top: 12px;
+}
+
+.task-section-group__title {
+  min-height: 32px;
+  padding: 7px 12px;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  color: var(--text-main);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.task-section-group__title span {
+  color: var(--text-disabled);
+  font-size: 12px;
+  font-weight: 500;
+}

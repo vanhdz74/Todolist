@@ -8,7 +8,7 @@ const LoginPage = () => {
       flex
       items-center
       justify-center
-      bg-gray-100
+      bg-[var(--bg-app)]
     "
     >
       <SignIn />

@@ -1,25 +1,22 @@
 // src/constants/theme.ts
 
-// Chế độ Sáng (Mặc định)
-export const lightThemeColors = {
-  primary: "#2564cf",
-  background: "#faf9f8",
-  surface: "#ffffff",
-  border: "#edebe9",
-  divider: "#f0f0f0",
-  textPrimary: "#333333",
-  textSecondary: "#605e5c",
-  textHint: "#8c8c8c",
+export const themeColorTokens = {
+  primary: "var(--primary)",
+  primaryHover: "var(--primary-hover)",
+  background: "var(--bg-app)",
+  surface: "var(--bg-surface)",
+  sidebar: "var(--bg-sidebar)",
+  hover: "var(--bg-hover)",
+  selected: "var(--bg-selected)",
+  border: "var(--border)",
+  borderStrong: "var(--border-strong)",
+  textPrimary: "var(--text-main)",
+  textSecondary: "var(--text-secondary)",
+  textHint: "var(--text-disabled)",
+  taskComplete: "var(--task-complete)",
+  taskImportant: "var(--task-important)",
+  danger: "var(--danger)",
 };
 
-// Chế độ Tối (Dark/Night Mode)
-export const darkThemeColors = {
-  primary: "#2899f5", // Xanh dương sáng hơn một chút để nổi trên nền đen
-  background: "#111111", // Nền tối sâu
-  surface: "#212121", // Màu các thẻ (Box, Sidebar) nhạt hơn nền
-  border: "#333333",
-  divider: "#424242",
-  textPrimary: "#ffffff", // Chữ trắng
-  textSecondary: "#aaaaaa",
-  textHint: "#757575",
-};
+export const lightThemeColors = themeColorTokens;
+export const darkThemeColors = themeColorTokens;

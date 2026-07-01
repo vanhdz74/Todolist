@@ -20,3 +20,90 @@ body {
   background: var(--bg-app);
   color: var(--text-main);
 }
+
+.ant-layout,
+.ant-layout-content {
+  background: var(--bg-app);
+  color: var(--text-main);
+}
+
+.ant-menu {
+  background: transparent !important;
+  color: var(--text-main);
+}
+
+.ant-menu .ant-menu-item {
+  color: var(--text-main);
+}
+
+.ant-menu .ant-menu-item:hover,
+.ant-menu .ant-menu-submenu-title:hover {
+  background: var(--bg-hover) !important;
+  color: var(--text-main) !important;
+}
+
+.ant-menu .ant-menu-item-selected {
+  background: var(--bg-selected) !important;
+  color: var(--text-main) !important;
+}
+
+.ant-btn-text {
+  color: var(--text-secondary);
+}
+
+.ant-btn-text:not(:disabled):hover,
+.ant-btn-text:not(:disabled):focus {
+  background: var(--bg-hover) !important;
+  color: var(--text-main) !important;
+}
+
+.ant-layout-header .ant-btn-text,
+.ant-layout-header .ant-btn-text:not(:disabled):hover,
+.ant-layout-header .ant-btn-text:not(:disabled):focus {
+  color: var(--text-on-primary) !important;
+}
+
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-picker,
+.ant-select-selector,
+.ant-segmented {
+  background: var(--bg-input) !important;
+  color: var(--text-main) !important;
+}
+
+.ant-input::placeholder,
+.ant-picker-input > input::placeholder {
+  color: var(--text-disabled) !important;
+}
+
+.ant-segmented {
+  border: 1px solid var(--border);
+}
+
+.ant-segmented-item {
+  color: var(--text-secondary);
+}
+
+.ant-segmented-item-selected {
+  background: var(--bg-selected) !important;
+  color: var(--text-main) !important;
+}
+
+.ant-dropdown .ant-dropdown-menu,
+.ant-drawer .ant-drawer-content,
+.ant-drawer .ant-drawer-header,
+.ant-drawer .ant-drawer-body {
+  background: var(--bg-surface) !important;
+  color: var(--text-main) !important;
+}
+
+.ant-drawer .ant-drawer-header,
+.ant-divider {
+  border-color: var(--border) !important;
+}
+
+.ant-checkbox .ant-checkbox-inner {
+  background: var(--bg-input);
+  border-color: var(--border-strong);
+}

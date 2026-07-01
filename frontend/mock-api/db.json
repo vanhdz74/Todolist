@@ -4,7 +4,117 @@
       "id": 1,
       "username": "admin",
       "password": "123456",
-      "name": "Admin"
+      "name": "Admin",
+      "email": "admin@gmail.com",
+      "avatar": null,
+      "createdAt": "2026-06-01T08:00:00Z"
+    },
+    {
+      "id": 2,
+      "username": "ha",
+      "password": "123456",
+      "name": "Ha Nguyen",
+      "email": "ha@gmail.com",
+      "avatar": null,
+      "createdAt": "2026-06-10T08:00:00Z"
+    }
+  ],
+  "listGroups": [
+    {
+      "id": 1,
+      "name": "Home",
+      "position": 1,
+      "userId": 1,
+      "createdAt": "2026-06-01T08:00:00Z",
+      "updatedAt": "2026-06-20T08:00:00Z"
+    },
+    {
+      "id": 2,
+      "name": "Projects",
+      "position": 2,
+      "userId": 1,
+      "createdAt": "2026-06-02T08:00:00Z",
+      "updatedAt": "2026-06-29T08:00:00Z"
+    },
+    {
+      "name": "gh",
+      "position": 3,
+      "userId": 1,
+      "createdAt": "2026-06-30T06:59:46.104Z",
+      "updatedAt": "2026-06-30T06:59:46.104Z",
+      "id": 3
+    }
+  ],
+  "lists": [
+    {
+      "id": 1,
+      "name": "Personal",
+      "color": "#2564cf",
+      "groupId": 1,
+      "position": 3,
+      "userId": 1,
+      "createdAt": "2026-06-01T08:00:00Z",
+      "updatedAt": "2026-06-30T08:55:03.963Z"
+    },
+    {
+      "id": 2,
+      "name": "Work",
+      "color": "#2564cf",
+      "groupId": 2,
+      "position": 1,
+      "userId": 1,
+      "createdAt": "2026-06-02T08:00:00Z",
+      "updatedAt": "2026-06-30T07:47:02.743Z"
+    },
+    {
+      "id": 3,
+      "name": "Frontend",
+      "color": "#107c10",
+      "groupId": 3,
+      "position": 1,
+      "userId": 1,
+      "createdAt": "2026-06-10T08:00:00Z",
+      "updatedAt": "2026-07-01T08:31:15.400Z"
+    },
+    {
+      "id": 4,
+      "name": "Learning",
+      "color": "#2564cf",
+      "groupId": 1,
+      "position": 1,
+      "userId": 1,
+      "createdAt": "2026-06-15T08:00:00Z",
+      "updatedAt": "2026-06-30T07:46:43.738Z"
+    },
+    {
+      "name": "ls",
+      "color": "#2564cf",
+      "groupId": 1,
+      "position": 2,
+      "userId": 1,
+      "createdAt": "2026-06-30T08:54:33.063Z",
+      "updatedAt": "2026-06-30T08:55:03.963Z",
+      "id": 5
+    },
+    {
+      "name": "vde11",
+      "color": "#2564cf",
+      "groupId": 1,
+      "position": 4,
+      "userId": 1,
+      "createdAt": "2026-07-01T06:25:40.783Z",
+      "updatedAt": "2026-07-01T08:22:53.480Z",
+      "id": 6
+    },
+    {
+      "name": "ls1",
+      "color": "#2564cf",
+      "groupId": null,
+      "position": 2,
+      "userId": 1,
+      "createdAt": "2026-07-01T08:09:26.975Z",
+      "updatedAt": "2026-07-01T09:22:42.680Z",
+      "id": 7
     }
   ],
   "tasks": [
@@ -12,34 +122,467 @@
       "id": 1,
       "title": "Học React",
       "description": "Học Hooks và Redux Saga",
+      "completed": true,
+      "priority": "HIGH",
+      "myDay": true,
+      "dueDate": "2026-07-01T23:59:59Z",
+      "reminderDate": "2026-07-01T08:00:00Z",
+      "repeat": "NONE",
+      "assignedTo": null,
+      "listId": 4,
+      "userId": 1,
+      "createdAt": "2026-06-20T08:30:00Z",
+      "updatedAt": "2026-07-01T09:27:52.908Z"
+    },
+    {
+      "id": 3,
+      "title": "Ôn React Router 2",
+      "description": "Kiểm tra nested route và protected route",
+      "completed": true,
+      "priority": "HIGH",
+      "myDay": false,
+      "dueDate": "2026-07-02T23:59:59Z",
+      "reminderDate": "2026-07-02T08:00:00Z",
+      "repeat": "DAILY",
+      "assignedTo": null,
+      "listId": 4,
+      "userId": 1,
+      "createdAt": "2026-06-20T08:30:00Z",
+      "updatedAt": "2026-06-30T09:05:32.126Z"
+    },
+    {
+      "id": 4,
+      "title": "Mua đồ ăn",
+      "description": "Mua trứng, sữa, bánh mì",
+      "completed": true,
+      "priority": "HIGH",
+      "myDay": true,
+      "dueDate": "2026-06-30T18:00:00Z",
+      "reminderDate": "2026-06-30T17:00:00Z",
+      "repeat": "NONE",
+      "assignedTo": null,
+      "listId": 1,
+      "userId": 1,
+      "createdAt": "2026-06-29T09:00:00Z",
+      "updatedAt": "2026-07-01T09:27:54.995Z"
+    },
+    {
+      "id": 5,
+      "title": "Review UI Task Detail Panel",
+      "description": "Sửa panel giống Microsoft Todo hơn",
+      "completed": true,
+      "priority": "LOW",
+      "myDay": true,
+      "dueDate": "2026-06-30T23:59:59Z",
+      "reminderDate": null,
+      "repeat": "NONE",
+      "assignedTo": 1,
+      "listId": 3,
+      "userId": 1,
+      "createdAt": "2026-06-29T10:30:00Z",
+      "updatedAt": "2026-07-01T08:35:09.734Z"
+    },
+    {
+      "id": 6,
+      "title": "Dọn workspace",
+      "description": "",
+      "completed": true,
+      "priority": "HIGH",
+      "myDay": false,
+      "dueDate": "2026-06-17T17:00:00.000Z",
+      "reminderDate": null,
+      "repeat": "WEEKLY",
+      "assignedTo": null,
+      "listId": 2,
+      "userId": 1,
+      "createdAt": "2026-06-25T12:00:00Z",
+      "updatedAt": "2026-07-01T06:46:15.484Z"
+    },
+    {
+      "id": 7,
+      "title": "Chuẩn bị sprint planning",
+      "description": "Tổng hợp backlog và các đầu việc ưu tiên",
+      "completed": false,
+      "priority": "LOW",
+      "myDay": true,
+      "dueDate": "2026-07-03T09:00:00Z",
+      "reminderDate": "2026-07-03T08:30:00Z",
+      "repeat": "NONE",
+      "assignedTo": 1,
+      "listId": 2,
+      "userId": 1,
+      "createdAt": "2026-06-30T08:10:00Z",
+      "updatedAt": "2026-07-01T08:08:47.473Z"
+    },
+    {
+      "title": "cve",
+      "description": "",
+      "completed": false,
+      "priority": "LOW",
+      "myDay": true,
+      "dueDate": "2026-06-28T17:00:00.000Z",
+      "reminderDate": null,
+      "repeat": "NONE",
+      "assignedTo": null,
+      "listId": null,
+      "userId": 1,
+      "createdAt": "2026-06-30T06:39:11.791Z",
+      "updatedAt": "2026-07-01T07:02:51.343Z",
+      "id": 8
+    },
+    {
+      "title": "gg",
+      "description": "",
+      "completed": true,
+      "priority": "LOW",
+      "myDay": false,
+      "dueDate": null,
+      "reminderDate": null,
+      "repeat": "NONE",
+      "assignedTo": null,
+      "listId": null,
+      "userId": 1,
+      "createdAt": "2026-06-30T07:38:49.512Z",
+      "updatedAt": "2026-06-30T08:03:05.907Z",
+      "id": 9
+    },
+    {
+      "title": "b1",
+      "description": "",
+      "completed": true,
+      "priority": "LOW",
+      "myDay": false,
+      "dueDate": null,
+      "reminderDate": null,
+      "repeat": "NONE",
+      "assignedTo": null,
+      "listId": 1,
+      "userId": 1,
+      "createdAt": "2026-06-30T07:56:04.875Z",
+      "updatedAt": "2026-06-30T08:02:47.484Z",
+      "id": 10
+    },
+    {
+      "title": "b2",
+      "description": "",
+      "completed": true,
+      "priority": "HIGH",
+      "myDay": false,
+      "dueDate": null,
+      "reminderDate": null,
+      "repeat": "NONE",
+      "assignedTo": null,
+      "listId": 1,
+      "userId": 1,
+      "createdAt": "2026-06-30T07:56:31.139Z",
+      "updatedAt": "2026-07-01T07:00:54.983Z",
+      "id": 11
+    },
+    {
+      "title": "gg",
+      "description": "",
+      "completed": true,
+      "priority": "HIGH",
+      "myDay": false,
+      "dueDate": "2026-07-30T17:00:00.000Z",
+      "reminderDate": null,
+      "repeat": "NONE",
+      "assignedTo": null,
+      "listId": null,
+      "userId": 1,
+      "createdAt": "2026-06-30T08:17:45.955Z",
+      "updatedAt": "2026-07-01T06:51:21.280Z",
+      "id": 12
+    },
+    {
+      "title": "ve",
+      "description": "",
+      "completed": true,
+      "priority": "HIGH",
+      "myDay": true,
+      "dueDate": null,
+      "reminderDate": null,
+      "repeat": "NONE",
+      "assignedTo": null,
+      "listId": null,
+      "userId": 1,
+      "createdAt": "2026-07-01T07:00:57.831Z",
+      "updatedAt": "2026-07-01T07:38:18.925Z",
+      "id": 13
+    },
+    {
+      "title": "nty1",
+      "description": "ưc\n",
       "completed": false,
       "priority": "HIGH",
-      "dueDate": "2026-07-01T23:59:59Z",
-      "createdAt": "2026-06-20T08:30:00Z",
-      "updatedAt": "2026-06-20T08:30:00Z",
+      "myDay": true,
+      "dueDate": "2026-07-30T17:00:00.000Z",
+      "reminderDate": null,
+      "repeat": "NONE",
+      "assignedTo": null,
+      "listId": null,
+      "userId": 1,
+      "createdAt": "2026-07-01T07:00:59.165Z",
+      "updatedAt": "2026-07-01T07:59:43.602Z",
+      "id": 14
+    },
+    {
+      "title": "y1",
+      "description": "",
+      "completed": true,
+      "priority": "HIGH",
+      "myDay": false,
+      "dueDate": null,
+      "reminderDate": null,
+      "repeat": "NONE",
+      "assignedTo": null,
+      "listId": null,
+      "userId": 1,
+      "createdAt": "2026-07-01T07:01:00.455Z",
+      "updatedAt": "2026-07-01T07:30:19.016Z",
+      "id": 15
+    },
+    {
+      "title": "ce",
+      "description": "",
+      "completed": false,
+      "priority": "LOW",
+      "myDay": false,
+      "dueDate": null,
+      "reminderDate": null,
+      "repeat": "NONE",
+      "assignedTo": null,
+      "listId": 6,
+      "userId": 1,
+      "createdAt": "2026-07-01T08:23:25.481Z",
+      "updatedAt": "2026-07-01T08:23:25.481Z",
+      "id": 16
+    },
+    {
+      "title": "unfn",
+      "description": "",
+      "completed": false,
+      "priority": "LOW",
+      "myDay": true,
+      "dueDate": null,
+      "reminderDate": null,
+      "repeat": "NONE",
+      "assignedTo": null,
+      "listId": null,
+      "userId": 1,
+      "createdAt": "2026-07-01T09:13:21.241Z",
+      "updatedAt": "2026-07-01T09:13:21.241Z",
+      "id": 18
+    },
+    {
+      "title": "gr",
+      "description": "",
+      "completed": false,
+      "priority": "LOW",
+      "myDay": false,
+      "dueDate": null,
+      "reminderDate": null,
+      "repeat": "NONE",
+      "assignedTo": null,
+      "listId": null,
+      "userId": 1,
+      "createdAt": "2026-07-01T09:27:59.101Z",
+      "updatedAt": "2026-07-01T09:27:59.101Z",
+      "id": 19
+    },
+    {
+      "title": "egf",
+      "description": "",
+      "completed": false,
+      "priority": "LOW",
+      "myDay": false,
+      "dueDate": null,
+      "reminderDate": null,
+      "repeat": "NONE",
+      "assignedTo": null,
+      "listId": null,
+      "userId": 1,
+      "createdAt": "2026-07-01T09:28:01.203Z",
+      "updatedAt": "2026-07-01T09:28:01.203Z",
+      "id": 20
+    },
+    {
+      "title": "ht",
+      "description": "",
+      "completed": false,
+      "priority": "LOW",
+      "myDay": false,
+      "dueDate": null,
+      "reminderDate": null,
+      "repeat": "NONE",
+      "assignedTo": null,
+      "listId": null,
+      "userId": 1,
+      "createdAt": "2026-07-01T09:28:11.802Z",
+      "updatedAt": "2026-07-01T09:28:11.802Z",
+      "id": 21
+    },
+    {
+      "title": "ht",
+      "description": "",
+      "completed": false,
+      "priority": "LOW",
+      "myDay": false,
+      "dueDate": null,
+      "reminderDate": null,
+      "repeat": "NONE",
+      "assignedTo": null,
+      "listId": null,
+      "userId": 1,
+      "createdAt": "2026-07-01T09:28:22.565Z",
+      "updatedAt": "2026-07-01T09:28:22.565Z",
+      "id": 22
+    },
+    {
+      "title": "ht",
+      "description": "",
+      "completed": false,
+      "priority": "LOW",
+      "myDay": false,
+      "dueDate": null,
+      "reminderDate": null,
+      "repeat": "NONE",
+      "assignedTo": null,
+      "listId": null,
+      "userId": 1,
+      "createdAt": "2026-07-01T09:28:28.133Z",
+      "updatedAt": "2026-07-01T09:28:28.133Z",
+      "id": 23
+    }
+  ],
+  "taskSteps": [
+    {
+      "id": 1,
+      "taskId": 1,
+      "title": "Học useState",
+      "completed": true,
+      "order": 1
+    },
+    {
+      "id": 2,
+      "taskId": 1,
+      "title": "Học useEffect",
+      "completed": false,
+      "order": 2
+    },
+    {
+      "id": 3,
+      "taskId": 1,
+      "title": "Học Redux Saga",
+      "completed": false,
+      "order": 3
+    },
+    {
+      "id": 4,
+      "taskId": 2,
+      "title": "Tạo mock API",
+      "completed": true,
+      "order": 1
+    },
+    {
+      "id": 5,
+      "taskId": 2,
+      "title": "Làm giao diện list",
+      "completed": true,
+      "order": 2
+    },
+    {
+      "id": 6,
+      "taskId": 5,
+      "title": "Sửa chiều cao panel",
+      "completed": true,
+      "order": 1
+    },
+    {
+      "id": 7,
+      "taskId": 5,
+      "title": "Fix footer dính chân",
+      "completed": false,
+      "order": 2
+    }
+  ],
+  "categories": [
+    {
+      "id": 1,
+      "name": "Blue category",
+      "color": "blue",
       "userId": 1
     },
     {
       "id": 2,
-      "title": "Làm TodoList",
-      "description": "CRUD API",
-      "completed": true,
-      "priority": "LOW",
-      "dueDate": "2026-06-28T18:00:00Z",
-      "createdAt": "2026-06-18T09:15:00Z",
-      "updatedAt": "2026-06-22T14:20:00Z",
+      "name": "Green category",
+      "color": "green",
       "userId": 1
     },
     {
       "id": 3,
-      "title": "Học React JS",
-      "description": "Học Hooks và Redux Saga",
-      "completed": false,
-      "priority": "HIGH",
-      "dueDate": "2026-07-01T23:59:59Z",
-      "createdAt": "2026-06-20T08:30:00Z",
-      "updatedAt": "2026-06-20T08:30:00Z",
+      "name": "Purple category",
+      "color": "purple",
       "userId": 1
+    },
+    {
+      "id": 4,
+      "name": "Urgent",
+      "color": "volcano",
+      "userId": 1
+    }
+  ],
+  "taskCategories": [
+    {
+      "id": 1,
+      "taskId": 1,
+      "categoryId": 1
+    },
+    {
+      "id": 2,
+      "taskId": 1,
+      "categoryId": 2
+    },
+    {
+      "id": 3,
+      "taskId": 2,
+      "categoryId": 3
+    },
+    {
+      "id": 4,
+      "taskId": 5,
+      "categoryId": 4
+    }
+  ],
+  "attachments": [
+    {
+      "id": 1,
+      "taskId": 5,
+      "name": "todo-ui-reference.png",
+      "url": "/uploads/todo-ui-reference.png",
+      "type": "image/png",
+      "size": 245000,
+      "createdAt": "2026-06-29T10:40:00Z"
+    }
+  ],
+  "notifications": [
+    {
+      "id": 1,
+      "taskId": 1,
+      "userId": 1,
+      "type": "REMINDER",
+      "message": "Học React due tomorrow",
+      "read": false,
+      "createdAt": "2026-06-30T08:00:00Z"
+    },
+    {
+      "id": 2,
+      "taskId": 5,
+      "userId": 1,
+      "type": "ASSIGNED",
+      "message": "Bạn được giao task Review UI Task Detail Panel",
+      "read": false,
+      "createdAt": "2026-06-29T10:30:00Z"
     }
   ]
 }

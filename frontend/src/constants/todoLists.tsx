@@ -7,6 +7,7 @@ import {
 } from "@ant-design/icons";
 
 import type { Task } from "@/types/task";
+import { CURRENT_USER_ID } from "./user";
 
 export type TodoListKey =
   | "my-day"
@@ -14,8 +15,7 @@ export type TodoListKey =
   | "planned"
   | "assigned"
   | "tasks"
-  | "personal"
-  | "work";
+  | `list-${number}`;
 
 export type ViewMode = "grid" | "list";
 
@@ -33,14 +33,6 @@ export type TodoListConfig = {
   filter: (task: Task) => boolean;
 };
 
-const today = new Date().toISOString().slice(0, 10);
-
-const hasKeyword = (task: Task, keyword: string) => {
-  const text = `${task.title} ${task.description}`.toLowerCase();
-
-  return text.includes(keyword);
-};
-
 // Sidebar
 export const todoLists: TodoListConfig[] = [
   {
@@ -53,10 +45,10 @@ export const todoLists: TodoListConfig[] = [
       day: "numeric",
     }).format(new Date()),
     icon: <SunOutlined />,
-    accentClassName: "text-[#2564cf]",
+    accentClassName: "text-[var(--primary)]",
     defaultView: "grid",
     group: "smart",
-    filter: (task) => task.dueDate?.slice(0, 10) === today,
+    filter: (task) => task.myDay,
   },
   {
     key: "important",
@@ -64,7 +56,7 @@ export const todoLists: TodoListConfig[] = [
     title: "Important",
     subtitle: "Tasks marked as high priority",
     icon: <StarOutlined />,
-    accentClassName: "text-[#e33e5a]",
+    accentClassName: "text-[var(--task-important)]",
     defaultView: "grid",
     group: "smart",
     filter: (task) => task.priority === "HIGH",
@@ -75,7 +67,7 @@ export const todoLists: TodoListConfig[] = [
     title: "Planned",
     subtitle: "Tasks with due dates",
     icon: <CalendarOutlined />,
-    accentClassName: "text-[#107c10]",
+    accentClassName: "text-[var(--task-complete)]",
     defaultView: "grid",
     group: "smart",
     filter: (task) => Boolean(task.dueDate),
@@ -86,10 +78,10 @@ export const todoLists: TodoListConfig[] = [
     title: "Assigned to me",
     subtitle: "Tasks assigned to your account",
     icon: <UserOutlined />,
-    accentClassName: "text-[#8764b8]",
+    accentClassName: "text-[var(--assigned)]",
     defaultView: "grid",
     group: "smart",
-    filter: () => true,
+    filter: (task) => task.assignedTo === CURRENT_USER_ID,
   },
   {
     key: "tasks",
@@ -97,32 +89,10 @@ export const todoLists: TodoListConfig[] = [
     title: "Tasks",
     subtitle: "Manage your tasks",
     icon: <HomeOutlined />,
-    accentClassName: "text-[#2564cf]",
+    accentClassName: "text-[var(--primary)]",
     defaultView: "grid",
     group: "smart",
     filter: () => true,
-  },
-  {
-    key: "personal",
-    path: "/personal",
-    title: "Personal",
-    subtitle: "Personal list",
-    icon: <HomeOutlined />,
-    accentClassName: "text-[#498205]",
-    defaultView: "list",
-    group: "custom",
-    filter: (task) => hasKeyword(task, "personal"),
-  },
-  {
-    key: "work",
-    path: "/work",
-    title: "Work",
-    subtitle: "Work list",
-    icon: <HomeOutlined />,
-    accentClassName: "text-[#0078d4]",
-    defaultView: "list",
-    group: "custom",
-    filter: (task) => hasKeyword(task, "work") || hasKeyword(task, "react"),
   },
 ];
 

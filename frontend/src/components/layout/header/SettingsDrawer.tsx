@@ -34,7 +34,7 @@ export default function SettingsDrawer({
       maskClosable={false}
       styles={{
         wrapper: {
-          boxShadow: "-5px 0 20px rgba(0,0,0,.15)",
+          boxShadow: "var(--shadow)",
           top: "50px", // chiều cao header
           height: "calc(100% - 64px)",
         },
@@ -46,7 +46,7 @@ export default function SettingsDrawer({
         <div>
           <h3 className="font-semibold text-lg">Account</h3>
 
-          <p className="text-gray-500 mt-2">{email}</p>
+          <p className="mt-2 text-[var(--text-secondary)]">{email}</p>
         </div>
 
         <Divider />
@@ -67,7 +67,7 @@ export default function SettingsDrawer({
             <div>
               <p>Dark mode</p>
 
-              <span className="text-sm text-gray-400">
+              <span className="text-sm text-[var(--text-disabled)]">
                 Change application theme
               </span>
             </div>
@@ -85,7 +85,9 @@ export default function SettingsDrawer({
             <div>
               <p>Compact layout</p>
 
-              <span className="text-sm text-gray-400">Reduce spacing</span>
+              <span className="text-sm text-[var(--text-disabled)]">
+                Reduce spacing
+              </span>
             </div>
 
             <Switch />
@@ -109,7 +111,9 @@ export default function SettingsDrawer({
             <div>
               <p>Task reminder</p>
 
-              <span className="text-sm text-gray-400">Receive task alerts</span>
+              <span className="text-sm text-[var(--text-disabled)]">
+                Receive task alerts
+              </span>
             </div>
 
             <Switch defaultChecked />

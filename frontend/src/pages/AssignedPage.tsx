@@ -5,5 +5,5 @@ import TaskCollectionPage from "./TaskCollectionPage";
 export const AssignedPage = () => {
   const list = getTodoListByKey("assigned");
 
-  return list ? <TaskCollectionPage list={list} /> : null;
+  return list ? <TaskCollectionPage key={list.key} list={list} /> : null;
 };

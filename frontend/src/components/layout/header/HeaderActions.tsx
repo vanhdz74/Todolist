@@ -14,11 +14,18 @@ import { useUser, useClerk } from "@clerk/clerk-react";
 
 import SettingsDrawer from "./SettingsDrawer";
 import UserDropdown from "./UserDropdown";
+import {
+  applyThemeMode,
+  getStoredThemeMode,
+  persistThemeMode,
+} from "@/utils/themeMode";
 
 export default function HeaderActions() {
   const navigate = useNavigate();
 
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(
+    () => getStoredThemeMode() === "dark",
+  );
 
   const [openSetting, setOpenSetting] = useState(false);
 
@@ -33,9 +40,14 @@ export default function HeaderActions() {
   };
 
   const toggleTheme = () => {
-    setDarkMode((prev) => !prev);
+    setDarkMode((prev) => {
+      const nextMode = prev ? "light" : "dark";
 
-    document.documentElement.classList.toggle("dark");
+      persistThemeMode(nextMode);
+      applyThemeMode(nextMode);
+
+      return nextMode === "dark";
+    });
   };
 
   return (
@@ -45,7 +57,7 @@ export default function HeaderActions() {
           <Button
             type="text"
             icon={<SearchOutlined />}
-            className="text-white!"
+            className="text-(--text-on-primary)!"
           />
         </Tooltip>
 
@@ -53,7 +65,7 @@ export default function HeaderActions() {
           <Button
             type="text"
             icon={darkMode ? <SunOutlined /> : <MoonOutlined />}
-            className="text-white!"
+            className="text-(--text-on-primary)!"
             onClick={toggleTheme}
           />
         </Tooltip>
@@ -62,7 +74,7 @@ export default function HeaderActions() {
           <Button
             type="text"
             icon={<SettingOutlined />}
-            className="text-white!"
+            className="text-(--text-on-primary)!"
             onClick={() => setOpenSetting(true)}
           />
         </Tooltip>

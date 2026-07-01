@@ -1,19 +1,73 @@
+import { UnorderedListOutlined } from "@ant-design/icons";
 import { Navigate, useParams } from "react-router-dom";
-
-import { getTodoListByKey, type TodoListKey } from "@/constants/todoLists";
+import { useEffect, useMemo } from "react";
 
 import TaskCollectionPage from "./TaskCollectionPage";
 
-const customListKeys: TodoListKey[] = ["personal", "work"];
+import type { TodoListConfig } from "@/constants/todoLists";
+import { useAppDispatch } from "@/hooks/useAppDispatch";
+import { useAppSelector } from "@/hooks/useAppSelector";
+import {
+  selectListLoaded,
+  selectListLoading,
+  selectLists,
+} from "@/redux/list/listSelector";
+import { getListsRequest } from "@/redux/list/listSlice";
 
 export const CustomListPage = () => {
-  const { listKey } = useParams();
+  const { listId } = useParams();
 
-  if (!listKey || !customListKeys.includes(listKey as TodoListKey)) {
+  const dispatch = useAppDispatch();
+
+  const lists = useAppSelector(selectLists);
+  const loading = useAppSelector(selectListLoading);
+  const loaded = useAppSelector(selectListLoaded);
+
+  const numericListId = Number(listId);
+  const isInvalidListId = !listId || Number.isNaN(numericListId);
+
+  // Lấy list
+  useEffect(() => {
+    if (!loaded) {
+      dispatch(getListsRequest({ userId: 1 }));
+    }
+  }, [dispatch, loaded]);
+
+  const currentList = useMemo(() => {
+    return lists.find((list) => list.id === numericListId) ?? null;
+  }, [lists, numericListId]);
+
+  const customListConfig = useMemo<TodoListConfig | null>(() => {
+    if (!currentList) return null;
+
+    return {
+      key: `list-${currentList.id}`,
+      path: `/lists/${currentList.id}`,
+      title: currentList.name,
+      subtitle: undefined,
+      icon: <UnorderedListOutlined />,
+      accentClassName: "text-[var(--text-secondary)]",
+      defaultView: "list",
+      group: "custom",
+
+      // filter phụ, fetch chính nằm ở TaskCollectionPage
+      filter: (task) => task.listId === currentList.id,
+    };
+  }, [currentList]);
+
+  if (isInvalidListId) {
     return <Navigate to="/tasks" replace />;
   }
 
-  const list = getTodoListByKey(listKey as TodoListKey);
+  if (loading || !loaded) {
+    return null;
+  }
 
-  return list ? <TaskCollectionPage list={list} /> : null;
+  if (!customListConfig) {
+    return <Navigate to="/tasks" replace />;
+  }
+
+  return (
+    <TaskCollectionPage key={customListConfig.key} list={customListConfig} />
+  );
 };

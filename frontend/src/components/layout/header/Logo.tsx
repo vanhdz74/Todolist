@@ -7,7 +7,7 @@ export default function Logo() {
         flex
         items-center
         gap-2
-        text-white
+        text-[var(--text-on-primary)]
         font-semibold
       "
     >

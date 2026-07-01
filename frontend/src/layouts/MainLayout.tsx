@@ -13,16 +13,17 @@ export default function MainLayout() {
       <AppHeader />
 
       {/* Content */}
-      <Layout>
+      <Layout className="min-h-0">
         {/* Sidebar */}
         <Sidebar />
 
         {/* Main Content */}
-        <Content className="bg-[#faf9f8] overflow-auto">
+        <Content className="min-h-0 overflow-hidden bg-[var(--bg-app)]">
           <div
             className="
               min-w-300
-              min-h-full
+              h-full
+              min-h-0
               p-6!
               mx-auto
               flex

@@ -35,9 +35,10 @@ export default function Sidebar() {
           className="
             flex-1
             overflow-auto
+            overflow-x-hidden
           "
         >
-          <SidebarMenu />
+          <SidebarMenu collapsed={collapsed} />
         </div>
 
         <SidebarFooter />

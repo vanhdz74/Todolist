@@ -1,285 +1,199 @@
-/* =========================
-   MICROSOFT TO DO TASK ROW
-========================= */
+/* AntD overrides for Microsoft To Do style task rows. Layout stays in TSX. */
 
 .task-item {
-  --task-grid-columns: 40px minmax(360px, 560px) 170px 160px minmax(0, 1fr);
-  --todo-red: #d13438;
-  --todo-text: #323130;
-  --todo-muted: #605e5c;
-  --todo-border: #f3f2f1;
-  --todo-hover-border: #c8c6c4;
-  --todo-hover-bg: #faf9f8;
-
-  display: grid;
-  grid-template-columns: var(--task-grid-columns);
-  align-items: center;
-
-  min-height: 42px;
-  padding: 0 12px;
-
-  background: #ffffff;
-  color: var(--todo-text);
-  border-bottom: 1px solid var(--todo-border);
-
   user-select: none;
 }
 
-/* Không hover chung cả row nữa */
-.task-item:hover {
-  background: #ffffff;
+.task-item:focus {
+  outline: none;
 }
 
-/* =========================
-   CHECKBOX CELL
-========================= */
-
-.task-item__check-cell {
-  height: 36px;
-
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-
-  padding: 0 8px;
-
-  border: 1px solid transparent;
-  background: transparent;
+.task-item--list.is-selected {
+  background: var(--bg-selected);
 }
 
-.task-item__check-cell:hover {
-  background: var(--todo-hover-bg);
-  border-color: var(--todo-hover-border);
+.task-item--list:focus-visible {
+  outline: 1px solid var(--border-strong);
+  outline-offset: -1px;
 }
 
-.task-item__check-cell:focus-within {
-  background: #ffffff;
-  border-color: var(--todo-red);
+.task-item--grid.is-selected {
+  background: var(--bg-surface);
 }
 
-.task-item .ant-checkbox .ant-checkbox-inner {
-  width: 16px !important;
-  height: 16px !important;
-
-  border-radius: 999px !important;
-  border-color: var(--todo-red) !important;
-  background: #ffffff;
+.task-item--grid:focus,
+.task-item--grid:focus-visible {
+  outline: none;
 }
 
-.task-item .ant-checkbox:hover .ant-checkbox-inner {
-  border-color: var(--todo-red) !important;
-}
-
-.task-item .ant-checkbox-checked .ant-checkbox-inner {
-  background: var(--todo-red) !important;
-  border-color: var(--todo-red) !important;
-}
-
-.task-item .ant-checkbox-checked::after {
-  border-color: var(--todo-red) !important;
-  border-radius: 999px !important;
-}
-
-/* =========================
-   TITLE CELL
-========================= */
-
-.task-item__title-cell {
+.task-item__cell {
   min-width: 0;
-  height: 36px;
+}
 
-  display: flex;
-  align-items: center;
-  gap: 8px;
-
-  padding: 0 12px;
-
-  border: 1px solid transparent;
+.task-item--grid .task-item__cell {
   background: transparent;
-}
-
-.task-item__title-cell:hover {
-  background: var(--todo-hover-bg);
-  border-color: var(--todo-hover-border);
-}
-
-.task-item__title-cell:focus-within,
-.task-item.is-selected .task-item__title-cell {
-  background: #ffffff;
-  border-color: var(--todo-red);
-}
-
-.task-item__title {
-  min-width: 0;
-  flex: 1;
-
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-
-  color: var(--todo-text);
-  font-size: 13px;
-  line-height: 20px;
-}
-
-.task-item.is-completed .task-item__title {
-  color: #8a8886;
-  text-decoration: line-through;
-}
-
-/* Nút ! / info mở chi tiết */
-.task-item__detail-button {
-  flex: none;
-
-  width: 28px;
-  height: 28px;
-
-  color: var(--todo-red) !important;
-  opacity: 0;
+  border: 1px solid transparent;
+  border-radius: 0;
+  outline: none;
 
   transition:
-    opacity 0.14s ease,
-    background-color 0.14s ease,
-    transform 0.14s ease;
+    background-color 0.12s ease,
+    border-color 0.12s ease;
 }
 
-.task-item__title-cell:hover .task-item__detail-button,
-.task-item__title-cell:focus-within .task-item__detail-button,
-.task-item.is-selected .task-item__detail-button {
+.task-item--grid .task-item__cell:hover,
+.task-item--grid .task-item__cell:focus-within {
+  background: var(--bg-hover);
+}
+
+.task-item--grid .task-item__cell:hover {
+  border-color: var(--border-strong);
+}
+
+.task-item--grid .task-item__cell:focus-visible,
+.task-item--grid .task-item__cell:focus-within {
+  border-color: var(--primary);
+}
+
+.task-item__title-cell {
+  min-height: 40px;
+}
+
+.task-item--grid .task-item__title-cell {
+  margin-block: -1px;
+}
+
+.task-item--grid .task-item__grid-cell {
+  margin-block: -1px;
+}
+
+.task-item__due-icon {
+  width: 0;
+  opacity: 0;
+  overflow: hidden;
+
+  color: var(--text-secondary);
+
+  transition:
+    width 0.12s ease,
+    opacity 0.12s ease;
+}
+
+.task-item__grid-cell:hover .task-item__due-icon,
+.task-item__grid-cell:focus-visible .task-item__due-icon,
+.task-item__grid-cell:focus-within .task-item__due-icon {
+  width: 12px;
+  margin-right: 6px;
   opacity: 1;
 }
 
-.task-item__detail-button:hover {
-  background: #fde7e9 !important;
-  transform: scale(1.04);
+.task-item__info-icon {
+  opacity: 0;
+
+  transition: opacity 0.12s ease;
 }
 
-/* =========================
-   DUE DATE CELL
-========================= */
+.task-item__title-input {
+  padding: 0 !important;
 
-.task-item__due-cell {
-  position: relative;
-
-  height: 36px;
-  min-width: 0;
-
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-
-  padding: 0 12px;
-
-  border: 1px solid transparent;
-  background: transparent;
-
-  color: var(--todo-text);
-  font-size: 13px;
+  color: var(--text-main) !important;
+  background: transparent !important;
+  font-size: 14px !important;
+  line-height: 20px !important;
 }
 
-.task-item__due-cell:hover {
-  background: var(--todo-hover-bg);
-  border-color: var(--todo-hover-border);
-}
+.task-item__title-input input {
+  padding: 0 !important;
 
-.task-item__due-cell:focus-within {
-  background: #ffffff;
-  border-color: var(--todo-red);
-}
-
-.task-item__due-label {
-  display: inline-flex;
-  align-items: center;
-
-  min-height: 28px;
-
-  color: var(--todo-text);
-  font-size: 13px;
+  color: var(--text-main) !important;
+  background: transparent !important;
 }
 
 .task-item__date-picker {
-  position: absolute;
-  left: 4px;
-  top: 50%;
+  width: 100%;
+  padding: 0 !important;
 
-  width: 145px;
-
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(-50%);
+  background: transparent !important;
 }
 
-.task-item__due-cell:hover .task-item__due-label,
-.task-item__due-cell:focus-within .task-item__due-label {
-  opacity: 0;
+.task-item__date-picker .ant-picker-input > input {
+  text-align: center;
+  color: var(--text-main) !important;
+  font-size: 13px !important;
 }
 
-.task-item__due-cell:hover .task-item__date-picker,
-.task-item__due-cell:focus-within .task-item__date-picker {
+.task-item--grid:hover .task-item__info-icon,
+.task-item--grid.is-selected .task-item__info-icon,
+.task-item--grid:focus-visible .task-item__info-icon {
   opacity: 1;
-  pointer-events: auto;
 }
 
-/* =========================
-   IMPORTANCE CELL
-========================= */
+.task-item__checkbox .ant-checkbox-inner {
+  width: 18px !important;
+  height: 18px !important;
 
-.task-item__importance-cell {
-  height: 36px;
-
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-
-  padding: 0 12px;
-
-  border: 1px solid transparent;
-  background: transparent;
+  background: var(--bg-input) !important;
+  border-color: var(--primary) !important;
+  border-radius: 999px !important;
 }
 
-.task-item__importance-cell:hover {
-  background: var(--todo-hover-bg);
-  border-color: var(--todo-hover-border);
+.task-item__checkbox .ant-checkbox:hover .ant-checkbox-inner,
+.task-item__checkbox:hover .ant-checkbox-inner,
+.task-item:hover .task-item__checkbox .ant-checkbox-inner {
+  border-color: var(--primary) !important;
 }
 
-.task-item__importance-cell:focus-within {
-  background: #ffffff;
-  border-color: var(--todo-red);
+.task-item__checkbox .ant-checkbox-checked .ant-checkbox-inner {
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
+}
+
+.task-item__checkbox .ant-checkbox-checked::after {
+  border-color: var(--primary) !important;
+  border-radius: 999px !important;
+}
+
+.task-item__meta:not(:first-child)::before {
+  width: 3px;
+  height: 3px;
+  margin-right: 4px;
+
+  display: inline-block;
+
+  background: var(--text-disabled);
+  border-radius: 999px;
+
+  content: "";
+}
+
+.task-item__meta svg {
+  flex: none;
+  font-size: 11px;
 }
 
 .task-item__star-button {
-  width: 28px;
-  height: 28px;
+  width: 30px !important;
+  height: 30px !important;
+  min-width: 30px !important;
+  padding: 0 !important;
 
-  color: var(--todo-red) !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .task-item__star-button:hover,
-.task-item__star-button[aria-expanded="true"] {
-  background: #fde7e9 !important;
+.task-item__star-button:focus,
+.task-item__star-button:active {
+  background: rgba(0, 0, 0, 0.04) !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
 }
 
-.task-item__star-icon,
-.task-item__star-icon.is-important,
-.task-item__menu-star.is-important {
-  color: var(--todo-red);
+.task-item__star-icon {
   font-size: 16px;
 }
 
-.task-item__empty-cell {
-  min-width: 0;
-}
-
-/* =========================
-   RESPONSIVE
-========================= */
-
-@media (max-width: 900px) {
-  .task-item {
-    --task-grid-columns: 40px minmax(180px, 1fr) 130px 90px;
-  }
-
-  .task-item__empty-cell {
-    display: none;
-  }
+.task-item:hover .task-item__star-icon:not(.is-important) {
+  color: var(--primary) !important;
 }

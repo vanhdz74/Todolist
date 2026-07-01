@@ -1,12 +1,20 @@
 import axios from "axios";
 
+type ClerkTokenGetter = () => Promise<string | null>;
+
+let clerkTokenGetter: ClerkTokenGetter | null = null;
+
+export const setClerkTokenGetter = (tokenGetter: ClerkTokenGetter | null) => {
+  clerkTokenGetter = tokenGetter;
+};
+
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
   timeout: 10000,
 });
 
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("accessToken");
+api.interceptors.request.use(async (config) => {
+  const token = clerkTokenGetter ? await clerkTokenGetter() : null;
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -18,10 +26,6 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      localStorage.clear();
-    }
-
     return Promise.reject(error);
   },
 );

@@ -6,8 +6,16 @@ import {
 
 import { Dropdown, Avatar } from "antd";
 
+type HeaderUser = {
+  imageUrl?: string;
+  fullName?: string | null;
+  primaryEmailAddress?: {
+    emailAddress?: string;
+  } | null;
+} | null | undefined;
+
 type Props = {
-  user: any;
+  user: HeaderUser;
   handleLogout: () => void;
   openSetting: () => void;
 };
@@ -25,11 +33,11 @@ export default function UserDropdown({
         <div
           className="
             w-[320px]
-            bg-white
+            bg-[var(--bg-surface)]
             rounded-2xl
             shadow-xl
             border
-            border-gray-200
+            border-[var(--border)]
             overflow-hidden
             mt-2
             p-5!
@@ -75,7 +83,7 @@ export default function UserDropdown({
                 <p
                   className="
                     text-sm
-                    text-gray-500
+                    text-[var(--text-secondary)]
                     truncate
                     mt-1
                   "
@@ -91,7 +99,7 @@ export default function UserDropdown({
           <div
             className="
               border-t
-              border-gray-100
+              border-[var(--border)]
             "
           />
 
@@ -113,7 +121,7 @@ export default function UserDropdown({
                 py-2.5
                 rounded-lg
                 text-sm
-                hover:bg-gray-100
+                hover:bg-[var(--bg-hover)]
                 transition
               "
             >
@@ -133,7 +141,7 @@ export default function UserDropdown({
                 py-2.5
                 rounded-lg
                 text-sm
-                hover:bg-gray-100
+                hover:bg-[var(--bg-hover)]
                 transition
               "
             >
@@ -146,7 +154,7 @@ export default function UserDropdown({
               className="
                 my-2
                 border-t
-                border-gray-100
+                border-[var(--border)]
               "
             />
 
@@ -161,8 +169,8 @@ export default function UserDropdown({
                 py-2.5
                 rounded-lg
                 text-sm
-                text-red-500
-                hover:bg-red-50
+                text-[var(--danger)]
+                hover:bg-[var(--bg-danger-soft)]
                 transition
               "
             >

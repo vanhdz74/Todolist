@@ -7,5 +7,5 @@ export const TasksPage = () => {
   const list = getTodoListByKey("tasks");
 
   // Lấy list tương ứng
-  return list ? <TaskCollectionPage list={list} /> : null;
+  return list ? <TaskCollectionPage key={list.key} list={list} /> : null;
 };

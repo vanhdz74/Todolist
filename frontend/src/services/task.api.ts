@@ -5,6 +5,10 @@ import type {
   CreateTaskResponse,
   GetTasksRequest,
   GetTasksResponse,
+  TaskAttachment,
+  TaskCategory,
+  TaskCategoryLink,
+  TaskStep,
   UpdateTaskRequest,
   UpdateTaskResponse,
 } from "@/types/task";
@@ -16,6 +20,22 @@ export const taskApi = {
     return api.get<GetTasksResponse>("/tasks", {
       params,
     });
+  },
+
+  getSteps() {
+    return api.get<TaskStep[]>("/taskSteps");
+  },
+
+  getCategories() {
+    return api.get<TaskCategory[]>("/categories");
+  },
+
+  getTaskCategories() {
+    return api.get<TaskCategoryLink[]>("/taskCategories");
+  },
+
+  getAttachments() {
+    return api.get<TaskAttachment[]>("/attachments");
   },
 
   create(data: CreateTaskRequest) {

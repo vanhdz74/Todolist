@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import MainLayout from "./layouts/MainLayout";
 
+import MainLayout from "./layouts/MainLayout";
 import {
   MyDayPage,
   ImportantPage,
@@ -10,39 +10,107 @@ import {
   CustomListPage,
 } from "./pages";
 
-import "./styles/globals.css";
-import "./styles/variables.css";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ProtectedRoute from "./routes/ProtectedRoute";
+import PageMeta from "./components/PageMeta";
+
+import "./styles/globals.css";
+import "./styles/variables.css";
+
+const withMeta = (
+  element: React.ReactNode,
+  title: string,
+  description?: string,
+) => {
+  return (
+    <>
+      <PageMeta title={title} description={description} />
+      {element}
+    </>
+  );
+};
 
 const App = () => {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Auth */}
-        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/login"
+          element={withMeta(
+            <LoginPage />,
+            "Login | Todo App",
+            "Đăng nhập vào Todo App.",
+          )}
+        />
 
-        <Route path="/register" element={<RegisterPage />} />
+        <Route
+          path="/register"
+          element={withMeta(
+            <RegisterPage />,
+            "Register | Todo App",
+            "Tạo tài khoản Todo App.",
+          )}
+        />
 
-        {/* Cần login */}
         <Route element={<ProtectedRoute />}>
-          {/* App */}
           <Route path="/" element={<MainLayout />}>
-            {/* / tự chuyển sang /my-day */}
             <Route index element={<Navigate to="/my-day" replace />} />
 
-            <Route path="my-day" element={<MyDayPage />} />
+            <Route
+              path="my-day"
+              element={withMeta(
+                <MyDayPage />,
+                "My Day | Todo App",
+                "Danh sách công việc trong ngày.",
+              )}
+            />
 
-            <Route path="important" element={<ImportantPage />} />
+            <Route
+              path="important"
+              element={withMeta(
+                <ImportantPage />,
+                "Important | Todo App",
+                "Các công việc quan trọng.",
+              )}
+            />
 
-            <Route path="planned" element={<PlannedPage />} />
+            <Route
+              path="planned"
+              element={withMeta(
+                <PlannedPage />,
+                "Planned | Todo App",
+                "Các công việc đã lên kế hoạch.",
+              )}
+            />
 
-            <Route path="assigned" element={<AssignedPage />} />
+            <Route
+              path="assigned"
+              element={withMeta(
+                <AssignedPage />,
+                "Assigned to me | Todo App",
+                "Các công việc được giao cho bạn.",
+              )}
+            />
 
-            <Route path="tasks" element={<TasksPage />} />
+            <Route
+              path="tasks"
+              element={withMeta(
+                <TasksPage />,
+                "Tasks | Todo App",
+                "Tất cả công việc của bạn.",
+              )}
+            />
 
-            <Route path=":listKey" element={<CustomListPage />} />
+            {/* Phần list + group */}
+            <Route
+              path="lists/:listId"
+              element={withMeta(
+                <CustomListPage />,
+                "Custom List | Todo App",
+                "Danh sách công việc tùy chỉnh.",
+              )}
+            />
           </Route>
         </Route>
       </Routes>
