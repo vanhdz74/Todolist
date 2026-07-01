@@ -47,6 +47,7 @@ const isSameDay = (first: Date, second: Date) => {
   );
 };
 
+// Format
 const formatTaskDate = (value?: string | null) => {
   if (!value) return "";
 
@@ -97,6 +98,7 @@ const formatRepeat = (value: Task["repeat"]) => {
   return repeatLabels[value];
 };
 
+// Lấy màu để set
 const getCategoryColor = (color: string) => {
   const colorMap: Record<string, string> = {
     blue: "#2564cf",
@@ -130,6 +132,7 @@ export default function TaskItem({ task, variant, selected, onSelect }: Props) {
     new Date(task.dueDate as string).setHours(0, 0, 0, 0) <
       new Date().setHours(0, 0, 0, 0);
 
+  // Toggle impotance
   const toggleImportant = () => {
     dispatch(
       updateTaskRequest({
@@ -142,6 +145,7 @@ export default function TaskItem({ task, variant, selected, onSelect }: Props) {
     );
   };
 
+  // Toggle completed
   const toggleCompleted = (completed: boolean) => {
     dispatch(
       updateTaskRequest({
@@ -154,6 +158,7 @@ export default function TaskItem({ task, variant, selected, onSelect }: Props) {
     );
   };
 
+  // Các item để hiện phía dưới
   const metadataItems: Array<TaskMetadataItem | null> = [
     task.myDay
       ? {
@@ -224,6 +229,7 @@ export default function TaskItem({ task, variant, selected, onSelect }: Props) {
     Boolean(item),
   );
 
+  // Call api update task
   const updateTask = (data: Partial<Task>) => {
     dispatch(
       updateTaskRequest({
