@@ -2,7 +2,7 @@ export type TodoList = {
   id: number;
   name: string;
   color: string;
-  groupId: number | null;
+  groupId?: number | null;
   position: number;
   userId: number;
   createdAt: string;
@@ -18,6 +18,29 @@ export type TodoListGroup = {
   updatedAt: string;
 };
 
+export type ListShareOwner = {
+  id: number | string;
+  name: string;
+  email: string;
+  initials: string;
+};
+
+export type ListShareRequest = {
+  origin: string;
+  owner: ListShareOwner;
+};
+
+export type ListShareResponse = {
+  id: number;
+  listId: number;
+  code: string;
+  inviteUrl: string;
+  createdBy: number;
+  createdAt: string;
+  updatedAt: string;
+  owner: ListShareOwner | null;
+};
+
 export type GetListsRequest = {
   userId?: number;
 };
@@ -29,7 +52,7 @@ export type GetListDetailResponse = TodoList;
 export type CreateListRequest = {
   name: string;
   color: string;
-  groupId: number | null;
+  groupId?: number | null;
   position: number;
   userId: number;
   createdAt: string;
@@ -41,7 +64,7 @@ export type CreateListResponse = TodoList;
 export type UpdateListRequest = Partial<{
   name: string;
   color: string;
-  groupId: number | null;
+  groupId?: number | null;
   position: number;
   updatedAt: string;
 }>;

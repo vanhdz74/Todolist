@@ -16,6 +16,7 @@ type Props = {
   variant: "grid" | "list";
   groups?: TaskSectionGroup[];
   selectedTaskId?: number;
+  emptyDescription?: React.ReactNode;
   onSelectTask: (task: Task) => void;
 };
 
@@ -26,6 +27,7 @@ export default function TaskSections({
   variant,
   groups,
   selectedTaskId,
+  emptyDescription,
   onSelectTask,
 }: Props) {
   const activeTasks = data.filter((task) => !task.completed);
@@ -45,14 +47,16 @@ export default function TaskSections({
     return (
       <Empty
         image={Empty.PRESENTED_IMAGE_SIMPLE}
-        description="No tasks here yet"
+        description={emptyDescription ?? "No tasks here yet"}
         className="mt-12"
       />
     );
   }
 
+  const listStackClassName = variant === "list" ? "task-list-stack" : "";
+
   return (
-    <div className={variant === "list" ? "space-y-2" : ""}>
+    <div className={listStackClassName}>
       {/* Các task chưa hoàn thành */}
       {visibleGroups.length > 0
         ? visibleGroups.map((group) => (
@@ -62,7 +66,7 @@ export default function TaskSections({
                 <span>{group.tasks.length}</span>
               </div>
 
-              <div className={variant === "list" ? "space-y-2" : ""}>
+              <div className={listStackClassName}>
                 {group.tasks.map((task) => (
                   <TaskItem
                     key={task.id}
@@ -89,13 +93,20 @@ export default function TaskSections({
       {completedTasks.length > 0 && (
         <Collapse
           ghost
-          className="mt-3! text-(--primary)!"
+          className="task-completed-collapse mt-3!"
           items={[
             {
               key: "completed",
-              label: `Completed (${completedTasks.length})`,
+              label: (
+                <span>
+                  <span className="font-bold!">Completed</span>{" "}
+                  <span className="font-normal!">
+                    ({completedTasks.length})
+                  </span>
+                </span>
+              ),
               children: (
-                <div className={variant === "list" ? "space-y-2" : ""}>
+                <div className={listStackClassName}>
                   {completedTasks.map((task) => (
                     <TaskItem
                       key={task.id}

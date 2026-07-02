@@ -1,9 +1,4 @@
-import {
-  SearchOutlined,
-  MoonOutlined,
-  SunOutlined,
-  SettingOutlined,
-} from "@ant-design/icons";
+import { MoonOutlined, SunOutlined, SettingOutlined } from "@ant-design/icons";
 
 import { Button, Space, Tooltip } from "antd";
 
@@ -19,6 +14,21 @@ import {
   getStoredThemeMode,
   persistThemeMode,
 } from "@/utils/themeMode";
+
+const iconButtonClassName = `
+  text-(--text-on-primary)!
+  transition-colors!
+
+  hover:bg-white/15!
+  hover:text-(--text-on-primary)!
+
+  focus:bg-white/15!
+  focus:text-(--text-on-primary)!
+
+  focus-visible:bg-white/15!
+  focus-visible:text-(--text-on-primary)!
+  focus-visible:outline-none!
+`;
 
 export default function HeaderActions() {
   const navigate = useNavigate();
@@ -53,19 +63,11 @@ export default function HeaderActions() {
   return (
     <>
       <Space>
-        <Tooltip title="Search">
-          <Button
-            type="text"
-            icon={<SearchOutlined />}
-            className="text-(--text-on-primary)!"
-          />
-        </Tooltip>
-
         <Tooltip title="Theme">
           <Button
             type="text"
             icon={darkMode ? <SunOutlined /> : <MoonOutlined />}
-            className="text-(--text-on-primary)!"
+            className={iconButtonClassName}
             onClick={toggleTheme}
           />
         </Tooltip>
@@ -74,7 +76,7 @@ export default function HeaderActions() {
           <Button
             type="text"
             icon={<SettingOutlined />}
-            className="text-(--text-on-primary)!"
+            className={iconButtonClassName}
             onClick={() => setOpenSetting(true)}
           />
         </Tooltip>

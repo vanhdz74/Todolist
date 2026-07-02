@@ -1,4 +1,12 @@
-import { FolderOutlined, PlusOutlined } from "@ant-design/icons";
+import {
+  ArrowDownOutlined,
+  ArrowUpOutlined,
+  EditOutlined,
+  FolderOpenOutlined,
+  FolderOutlined,
+  PlusOutlined,
+  SwapOutlined,
+} from "@ant-design/icons";
 import {
   DndContext,
   PointerSensor,
@@ -7,8 +15,13 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import type { DragEndEvent } from "@dnd-kit/core";
-import { arrayMove } from "@dnd-kit/sortable";
-import { Button } from "antd";
+import {
+  SortableContext,
+  arrayMove,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { Button, Input, Modal } from "antd";
+import type { MenuProps } from "antd";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -30,17 +43,24 @@ import {
   createListRequest,
   getListGroupsRequest,
   getListsRequest,
+  removeListGroupRequest,
+  updateListGroupRequest,
   updateListRequest,
 } from "@/redux/list/listSlice";
-import type { TodoList } from "@/types/list";
+import { selectSearchQuery } from "@/redux/ui/uiSelector";
+import { clearSearchQuery } from "@/redux/ui/uiSlice";
+import type { TodoList, TodoListGroup } from "@/types/list";
 
 import CreateListDraft from "./listGroups/CreateListDraft";
 import {
   UNGROUPED_KEY,
+  getGroupDragId,
   parseGroupDropId,
+  parseGroupDragId,
   parseListDragId,
 } from "./listGroups/dndIds";
 import DroppableGroup from "./listGroups/DroppableGroup";
+import SortableGroupItem from "./listGroups/SortableGroupItem";
 import type { DraftMode } from "./listGroups/types";
 
 type Props = {
@@ -57,6 +77,10 @@ export default function SidebarListGroups({ counts }: Props) {
   );
   const [draftMode, setDraftMode] = useState<DraftMode | null>(null);
   const [draftName, setDraftName] = useState("");
+  const [renamingGroup, setRenamingGroup] = useState<TodoListGroup | null>(
+    null,
+  );
+  const [renamingGroupName, setRenamingGroupName] = useState("");
 
   const lists = useAppSelector(selectLists);
   const groups = useAppSelector(selectListGroups);
@@ -65,11 +89,14 @@ export default function SidebarListGroups({ counts }: Props) {
   const listLoading = useAppSelector(selectListLoading);
   const groupLoaded = useAppSelector(selectListGroupsLoaded);
   const groupLoading = useAppSelector(selectListGroupLoading);
+  const searchQuery = useAppSelector(selectSearchQuery);
+  const isSearching = searchQuery.trim().length > 0;
+  const selectedPath = isSearching ? "" : location.pathname;
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 6,
+        distance: 4,
       },
     }),
   );
@@ -92,6 +119,38 @@ export default function SidebarListGroups({ counts }: Props) {
   );
 
   const ungroupedLists = listsByGroupId[UNGROUPED_KEY] ?? [];
+
+  const beginRenameGroup = (group: TodoListGroup) => {
+    setRenamingGroup(group);
+    setRenamingGroupName(group.name);
+  };
+
+  const cancelRenameGroup = () => {
+    setRenamingGroup(null);
+    setRenamingGroupName("");
+  };
+
+  const submitRenameGroup = () => {
+    if (!renamingGroup) return;
+
+    const nextName = renamingGroupName.trim();
+
+    if (!nextName || nextName === renamingGroup.name) {
+      cancelRenameGroup();
+      return;
+    }
+
+    dispatch(
+      updateListGroupRequest({
+        id: renamingGroup.id,
+        data: {
+          name: nextName,
+          updatedAt: new Date().toISOString(),
+        },
+      }),
+    );
+    cancelRenameGroup();
+  };
 
   const beginDraft = (mode: DraftMode) => {
     setDraftMode(mode);
@@ -117,7 +176,7 @@ export default function SidebarListGroups({ counts }: Props) {
         createListRequest({
           name: value,
           color: DEFAULT_LIST_COLOR,
-          groupId: null,
+          groupId: undefined,
           position: ungroupedLists.length + 1,
           userId: CURRENT_USER_ID,
           createdAt: now,
@@ -156,21 +215,47 @@ export default function SidebarListGroups({ counts }: Props) {
   };
 
   const updateListPositions = (
-    groupId: number | null,
+    groupId: number | null | undefined,
     orderedLists: TodoList[],
   ) => {
     const now = new Date().toISOString();
+    const normalizedGroupId = groupId ?? null;
 
     orderedLists.forEach((list, index) => {
       const nextPosition = index + 1;
 
-      if (list.groupId === groupId && list.position === nextPosition) return;
+      if (
+        (list.groupId ?? null) === normalizedGroupId &&
+        list.position === nextPosition
+      ) {
+        return;
+      }
 
       dispatch(
         updateListRequest({
           id: list.id,
           data: {
-            groupId,
+            groupId: groupId ?? undefined,
+            position: nextPosition,
+            updatedAt: now,
+          },
+        }),
+      );
+    });
+  };
+
+  const updateGroupPositions = (nextGroups: TodoListGroup[]) => {
+    const now = new Date().toISOString();
+
+    nextGroups.forEach((group, index) => {
+      const nextPosition = index + 1;
+
+      if (group.position === nextPosition) return;
+
+      dispatch(
+        updateListGroupRequest({
+          id: group.id,
+          data: {
             position: nextPosition,
             updatedAt: now,
           },
@@ -183,6 +268,13 @@ export default function SidebarListGroups({ counts }: Props) {
     const { active, over } = event;
     if (!over) return;
 
+    const activeGroupId = parseGroupDragId(String(active.id));
+
+    if (activeGroupId !== null) {
+      reorderGroup(activeGroupId, String(over.id));
+      return;
+    }
+
     const activeListId = parseListDragId(String(active.id));
     if (activeListId === null) return;
 
@@ -194,8 +286,9 @@ export default function SidebarListGroups({ counts }: Props) {
       overListId === null
         ? null
         : (lists.find((list) => list.id === overListId) ?? null);
+    const overId = String(over.id);
     const destinationGroupId =
-      overList?.groupId ?? parseGroupDropId(String(over.id));
+      overList?.groupId ?? parseGroupDragId(overId) ?? parseGroupDropId(overId);
 
     if (overList?.id === activeList.id) return;
 
@@ -205,6 +298,29 @@ export default function SidebarListGroups({ counts }: Props) {
     }
 
     moveToGroup(activeList, overList, destinationGroupId);
+  };
+
+  const reorderGroup = (activeGroupId: number, overId: string) => {
+    const overGroupId =
+      parseGroupDragId(overId) ??
+      parseGroupDropId(overId) ??
+      (() => {
+        const overListId = parseListDragId(overId);
+        if (overListId === null) return null;
+
+        return lists.find((list) => list.id === overListId)?.groupId ?? null;
+      })();
+
+    if (overGroupId === null || activeGroupId === overGroupId) return;
+
+    const oldIndex = orderedGroups.findIndex(
+      (group) => group.id === activeGroupId,
+    );
+    const newIndex = orderedGroups.findIndex((group) => group.id === overGroupId);
+
+    if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return;
+
+    updateGroupPositions(arrayMove(orderedGroups, oldIndex, newIndex));
   };
 
   const reorderWithinGroup = (activeList: TodoList, overList: TodoList) => {
@@ -227,12 +343,14 @@ export default function SidebarListGroups({ counts }: Props) {
   const moveToGroup = (
     activeList: TodoList,
     overList: TodoList | null,
-    destinationGroupId: number | null,
+    destinationGroupId: number | null | undefined,
   ) => {
+    const normalizedDestinationGroupId = destinationGroupId ?? null;
     const targetLists = lists
       .filter(
         (list) =>
-          list.groupId === destinationGroupId && list.id !== activeList.id,
+          (list.groupId ?? null) === normalizedDestinationGroupId &&
+          list.id !== activeList.id,
       )
       .sort((first, second) => first.position - second.position);
     const overIndex = overList
@@ -243,21 +361,99 @@ export default function SidebarListGroups({ counts }: Props) {
 
     nextTargetLists.splice(insertIndex, 0, {
       ...activeList,
-      groupId: destinationGroupId,
+      groupId: normalizedDestinationGroupId,
     });
 
     updateListPositions(destinationGroupId, nextTargetLists);
 
-    if (activeList.groupId !== destinationGroupId) {
+    if ((activeList.groupId ?? null) !== normalizedDestinationGroupId) {
       const nextSourceLists = lists
         .filter(
           (list) =>
-            list.groupId === activeList.groupId && list.id !== activeList.id,
+            (list.groupId ?? null) === (activeList.groupId ?? null) &&
+            list.id !== activeList.id,
         )
         .sort((first, second) => first.position - second.position);
 
       updateListPositions(activeList.groupId, nextSourceLists);
     }
+  };
+
+  const moveGroup = (group: TodoListGroup, direction: "up" | "down") => {
+    const currentIndex = orderedGroups.findIndex((item) => item.id === group.id);
+    const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+
+    if (
+      currentIndex === -1 ||
+      targetIndex < 0 ||
+      targetIndex >= orderedGroups.length
+    ) {
+      return;
+    }
+
+    updateGroupPositions(arrayMove(orderedGroups, currentIndex, targetIndex));
+  };
+
+  const confirmUngroup = (group: TodoListGroup) => {
+    Modal.confirm({
+      title: `Ungroup "${group.name}"?`,
+      content: "Lists inside this group will move back to Lists.",
+      okText: "Ungroup",
+      cancelText: "Cancel",
+      onOk: () => {
+        dispatch(removeListGroupRequest(group.id));
+      },
+    });
+  };
+
+  const getGroupContextMenu = (group: TodoListGroup): MenuProps => {
+    const groupIndex = orderedGroups.findIndex((item) => item.id === group.id);
+
+    return {
+      items: [
+        {
+          key: "rename",
+          icon: <EditOutlined />,
+          label: "Rename group",
+          onClick: () => beginRenameGroup(group),
+        },
+        {
+          key: "move",
+          icon: <SwapOutlined />,
+          label: "Move group",
+          children: [
+            {
+              key: "move-up",
+              icon: <ArrowUpOutlined />,
+              label: "Move up",
+              disabled: groupIndex <= 0,
+              onClick: () => moveGroup(group, "up"),
+            },
+            {
+              key: "move-down",
+              icon: <ArrowDownOutlined />,
+              label: "Move down",
+              disabled:
+                groupIndex === -1 || groupIndex >= orderedGroups.length - 1,
+              onClick: () => moveGroup(group, "down"),
+            },
+          ],
+        },
+        { type: "divider" },
+        {
+          key: "ungroup",
+          icon: <FolderOpenOutlined />,
+          label: "Ungroup",
+          danger: true,
+          onClick: () => confirmUngroup(group),
+        },
+      ],
+    };
+  };
+
+  const openList = (list: TodoList) => {
+    dispatch(clearSearchQuery());
+    navigate(`/lists/${list.id}`);
   };
 
   return (
@@ -274,25 +470,51 @@ export default function SidebarListGroups({ counts }: Props) {
             lists={ungroupedLists}
             counts={counts}
             showHeader={false}
-            selectedPath={location.pathname}
-            onOpenList={(list) => navigate(`/lists/${list.id}`)}
+            selectedPath={selectedPath}
+            onOpenList={openList}
           />
 
-          {orderedGroups.map((group) => (
-            <DroppableGroup
-              key={group.id}
-              groupId={group.id}
-              title={group.name}
-              lists={listsByGroupId[String(group.id)] ?? []}
-              collapsed={collapsedGroupIds.has(group.id)}
-              counts={counts}
-              selectedPath={location.pathname}
-              onToggle={() => toggleGroup(group.id)}
-              onOpenList={(list) => navigate(`/lists/${list.id}`)}
-            />
-          ))}
+          <SortableContext
+            items={orderedGroups.map((group) => getGroupDragId(group.id))}
+            strategy={verticalListSortingStrategy}
+          >
+            {orderedGroups.map((group) => (
+              <SortableGroupItem key={group.id} group={group}>
+                {(groupDragHandleProps) => (
+                  <DroppableGroup
+                    groupId={group.id}
+                    groupDragHandleProps={groupDragHandleProps}
+                    title={group.name}
+                    lists={listsByGroupId[String(group.id)] ?? []}
+                    contextMenu={getGroupContextMenu(group)}
+                    collapsed={collapsedGroupIds.has(group.id)}
+                    counts={counts}
+                    selectedPath={selectedPath}
+                    onToggle={() => toggleGroup(group.id)}
+                    onOpenList={openList}
+                  />
+                )}
+              </SortableGroupItem>
+            ))}
+          </SortableContext>
         </div>
       </DndContext>
+
+      <Modal
+        title="Rename group"
+        open={Boolean(renamingGroup)}
+        okText="Rename"
+        destroyOnHidden
+        onCancel={cancelRenameGroup}
+        onOk={submitRenameGroup}
+      >
+        <Input
+          autoFocus
+          value={renamingGroupName}
+          onChange={(event) => setRenamingGroupName(event.target.value)}
+          onPressEnter={submitRenameGroup}
+        />
+      </Modal>
 
       {draftMode && (
         <CreateListDraft

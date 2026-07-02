@@ -9,7 +9,17 @@
 }
 
 .task-item--list.is-selected {
-  background: var(--bg-selected);
+  background: color-mix(in srgb, var(--primary) 8%, var(--bg-surface));
+  border-color: color-mix(in srgb, var(--primary) 18%, var(--border));
+}
+
+.task-item--list {
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.task-item--list:hover {
+  background: var(--bg-hover);
 }
 
 .task-item--list:focus-visible {
@@ -67,12 +77,20 @@
   margin-block: -1px;
 }
 
+.task-item__grid-cell.is-today {
+  color: var(--primary) !important;
+}
+
+.task-item__grid-cell.is-overdue {
+  color: var(--danger) !important;
+}
+
 .task-item__due-icon {
   width: 0;
   opacity: 0;
   overflow: hidden;
 
-  color: var(--text-secondary);
+  color: inherit;
 
   transition:
     width 0.12s ease,
@@ -148,9 +166,35 @@
   border-color: var(--primary) !important;
 }
 
-.task-item__checkbox .ant-checkbox-checked::after {
+.task-item .task-item__checkbox.ant-checkbox-wrapper-checked .ant-checkbox-inner,
+.task-item .task-item__checkbox .ant-checkbox-checked .ant-checkbox-inner,
+.task-collection-page .task-item .task-item__checkbox.ant-checkbox-wrapper-checked .ant-checkbox-inner,
+.task-collection-page .task-item .task-item__checkbox .ant-checkbox-checked .ant-checkbox-inner {
+  background-color: var(--primary) !important;
   border-color: var(--primary) !important;
+}
+
+.task-item__checkbox .ant-checkbox-checked .ant-checkbox-inner::after {
+  border-color: var(--text-on-primary) !important;
+}
+
+.task-item .task-item__checkbox.ant-checkbox-wrapper-checked .ant-checkbox-inner::after,
+.task-item .task-item__checkbox .ant-checkbox-checked .ant-checkbox-inner::after,
+.task-collection-page .task-item .task-item__checkbox.ant-checkbox-wrapper-checked .ant-checkbox-inner::after,
+.task-collection-page .task-item .task-item__checkbox .ant-checkbox-checked .ant-checkbox-inner::after {
+  border-color: var(--text-on-primary) !important;
+}
+
+.task-item__checkbox .ant-checkbox-checked::after {
+  border-color: #ffffff !important;
   border-radius: 999px !important;
+}
+
+.task-item .task-item__checkbox.ant-checkbox-wrapper-checked .ant-checkbox-checked::after,
+.task-item .task-item__checkbox .ant-checkbox-checked::after,
+.task-collection-page .task-item .task-item__checkbox.ant-checkbox-wrapper-checked .ant-checkbox-checked::after,
+.task-collection-page .task-item .task-item__checkbox .ant-checkbox-checked::after {
+  border-color: #ffffff !important;
 }
 
 .task-item__meta:not(:first-child)::before {
@@ -171,6 +215,14 @@
   font-size: 11px;
 }
 
+.task-item__meta.is-accent {
+  color: var(--primary) !important;
+}
+
+.task-item__meta.is-danger {
+  color: var(--danger) !important;
+}
+
 .task-item__star-button {
   width: 30px !important;
   height: 30px !important;
@@ -185,15 +237,20 @@
 .task-item__star-button:hover,
 .task-item__star-button:focus,
 .task-item__star-button:active {
-  background: rgba(0, 0, 0, 0.04) !important;
+  background: color-mix(in srgb, var(--primary) 10%, transparent) !important;
   border-color: transparent !important;
   box-shadow: none !important;
 }
 
 .task-item__star-icon {
+  color: var(--text-secondary) !important;
   font-size: 16px;
 }
 
+.task-item__star-icon.is-important,
+.task-item__star-button:hover .task-item__star-icon,
+.task-item__star-button:focus .task-item__star-icon,
+.task-item__star-button:active .task-item__star-icon,
 .task-item:hover .task-item__star-icon:not(.is-important) {
   color: var(--primary) !important;
 }

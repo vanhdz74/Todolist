@@ -1,127 +1,34 @@
 import {
   CalendarOutlined,
-  CheckCircleOutlined,
-  FileOutlined,
   InfoCircleOutlined,
-  PaperClipOutlined,
-  RetweetOutlined,
   StarFilled,
   StarOutlined,
-  SunOutlined,
   TagOutlined,
-  UserOutlined,
 } from "@ant-design/icons";
 import { Button, Checkbox, DatePicker, Input } from "antd";
 import dayjs from "dayjs";
 import { useState } from "react";
-import type { KeyboardEvent, MouseEvent, ReactNode } from "react";
+import type { KeyboardEvent, MouseEvent } from "react";
 
 import "./TaskItem.css";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { updateTaskRequest } from "@/redux/task/taskSlice";
 import type { Task } from "@/types/task";
+import {
+  cx,
+  getCategoryColor,
+  getTaskItemDateLabels,
+  getTaskMetadataItems,
+  isTaskOverdue,
+} from "@/features/tasks";
+import type { TaskItemProps } from "@/features/tasks";
 
-type Props = {
-  task: Task;
-  variant: "grid" | "list";
-  selected: boolean;
-  onSelect: (task: Task) => void;
-};
-
-type TaskMetadataItem = {
-  key: string;
-  label: string;
-  icon: ReactNode;
-  tone?: "default" | "accent" | "danger";
-};
-
-const cx = (...classes: Array<string | false | null | undefined>) => {
-  return classes.filter(Boolean).join(" ");
-};
-
-const isSameDay = (first: Date, second: Date) => {
-  return (
-    first.getFullYear() === second.getFullYear() &&
-    first.getMonth() === second.getMonth() &&
-    first.getDate() === second.getDate()
-  );
-};
-
-// Format
-const formatTaskDate = (value?: string | null) => {
-  if (!value) return "";
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-
-  const today = new Date();
-  const tomorrow = new Date(today);
-  tomorrow.setDate(today.getDate() + 1);
-
-  if (isSameDay(date, today)) return "Today";
-  if (isSameDay(date, tomorrow)) return "Tomorrow";
-
-  if (date < today) {
-    return new Intl.DateTimeFormat("en-US", {
-      month: "short",
-      day: "2-digit",
-    }).format(date);
-  }
-
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "2-digit",
-  }).format(date);
-};
-
-const formatGridDate = (value?: string | null) => {
-  if (!value) return "";
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-
-  return new Intl.DateTimeFormat("en-US", {
-    month: "2-digit",
-    day: "2-digit",
-    year: "numeric",
-  }).format(date);
-};
-
-const formatRepeat = (value: Task["repeat"]) => {
-  const repeatLabels: Record<string, string> = {
-    NONE: "",
-    DAILY: "Daily",
-    WEEKDAYS: "Weekdays",
-    WEEKLY: "Weekly",
-    MONTHLY: "Monthly",
-  };
-
-  const customRepeat = value.match(/^EVERY_(\d+)_(DAY|WEEK|MONTH|YEAR)$/);
-
-  if (customRepeat) {
-    const [, every, unit] = customRepeat;
-    const unitText = unit.toLowerCase();
-    const pluralUnitText = Number(every) > 1 ? `${unitText}s` : unitText;
-
-    return `Every ${every} ${pluralUnitText}`;
-  }
-
-  return repeatLabels[value] ?? "";
-};
-
-// Lấy màu để set
-const getCategoryColor = (color: string) => {
-  const colorMap: Record<string, string> = {
-    blue: "#2564cf",
-    green: "#107c10",
-    purple: "#8764b8",
-    volcano: "#d83b01",
-  };
-
-  return colorMap[color] ?? color;
-};
-
-export default function TaskItem({ task, variant, selected, onSelect }: Props) {
+export default function TaskItem({
+  task,
+  variant,
+  selected,
+  onSelect,
+}: TaskItemProps) {
   const dispatch = useAppDispatch();
 
   const [editingTitle, setEditingTitle] = useState(false);
@@ -130,18 +37,9 @@ export default function TaskItem({ task, variant, selected, onSelect }: Props) {
 
   const isGrid = variant === "grid";
   const isImportant = task.priority === "HIGH";
-  const completedSteps =
-    task.steps?.filter((step) => step.completed).length ?? 0;
-  const totalSteps = task.steps?.length ?? 0;
-  const dueDateLabel = formatTaskDate(task.dueDate);
-  const gridDueDateLabel = formatGridDate(task.dueDate);
-  const reminderLabel = formatTaskDate(task.reminderDate);
-  const repeatLabel = formatRepeat(task.repeat);
-  const isOverdue =
-    Boolean(task.dueDate) &&
-    !task.completed &&
-    new Date(task.dueDate as string).setHours(0, 0, 0, 0) <
-      new Date().setHours(0, 0, 0, 0);
+  const { dueDateLabel, gridDueDateLabel } = getTaskItemDateLabels(task);
+  const isOverdue = isTaskOverdue(task);
+  const metadata = getTaskMetadataItems(task);
 
   // Toggle impotance
   const toggleImportant = () => {
@@ -168,77 +66,6 @@ export default function TaskItem({ task, variant, selected, onSelect }: Props) {
       }),
     );
   };
-
-  // Các item để hiện phía dưới
-  const metadataItems: Array<TaskMetadataItem | null> = [
-    task.myDay
-      ? {
-          key: "my-day",
-          label: "My Day",
-          icon: <SunOutlined />,
-        }
-      : null,
-    totalSteps > 0
-      ? {
-          key: "steps",
-          label: `${completedSteps} of ${totalSteps}`,
-          icon: <CheckCircleOutlined />,
-        }
-      : null,
-    dueDateLabel
-      ? {
-          key: "due-date",
-          label: dueDateLabel,
-          icon: <CalendarOutlined />,
-          tone: isOverdue
-            ? "danger"
-            : dueDateLabel === "Today"
-              ? "accent"
-              : "default",
-        }
-      : null,
-    reminderLabel
-      ? {
-          key: "reminder",
-          label: reminderLabel,
-          icon: <CalendarOutlined />,
-        }
-      : null,
-    repeatLabel
-      ? {
-          key: "repeat",
-          label: repeatLabel,
-          icon: <RetweetOutlined />,
-        }
-      : null,
-    task.attachments?.length
-      ? {
-          key: "attachments",
-          label:
-            task.attachments.length === 1
-              ? "File attached"
-              : `${task.attachments.length} files attached`,
-          icon: <PaperClipOutlined />,
-        }
-      : null,
-    task.description.trim()
-      ? {
-          key: "note",
-          label: "Note",
-          icon: <FileOutlined />,
-        }
-      : null,
-    task.assignedTo
-      ? {
-          key: "assigned",
-          label: "Assigned",
-          icon: <UserOutlined />,
-        }
-      : null,
-  ];
-  const metadata = metadataItems.filter((item): item is TaskMetadataItem =>
-    Boolean(item),
-  );
 
   // Call api update task
   const updateTask = (data: Partial<Task>) => {
@@ -400,17 +227,13 @@ export default function TaskItem({ task, variant, selected, onSelect }: Props) {
           {/* Title con với dạng list*/}
           {!isGrid && (
             <div className="mt-0.5! flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] leading-4 text-[var(--text-secondary)]">
-              <span className="task-item__meta inline-flex min-w-0 items-center gap-1 whitespace-nowrap">
-                Tasks
-              </span>
-
               {metadata.map((item) => (
                 <span
                   key={item.key}
                   className={cx(
                     "task-item__meta inline-flex min-w-0 items-center gap-1 whitespace-nowrap",
-                    item.tone === "accent" && "text-[var(--primary)]",
-                    item.tone === "danger" && "text-[var(--danger)]",
+                    item.tone === "accent" && "is-accent",
+                    item.tone === "danger" && "is-danger",
                   )}
                 >
                   {item.icon}
@@ -447,8 +270,8 @@ export default function TaskItem({ task, variant, selected, onSelect }: Props) {
         <div
           className={cx(
             "task-item__cell task-item__grid-cell flex h-10 min-w-0 items-center justify-center truncate px-2 text-center text-[13px] text-[var(--text-secondary)]",
-            dueDateLabel === "Today" && "text-[var(--primary)]",
-            isOverdue && "text-[var(--danger)]",
+            dueDateLabel === "Today" && "is-today",
+            isOverdue && "is-overdue",
           )}
           tabIndex={0}
           onClick={handleGridCellClick}
@@ -481,7 +304,10 @@ export default function TaskItem({ task, variant, selected, onSelect }: Props) {
               }}
             />
           ) : (
-            <span className="truncate">{gridDueDateLabel}</span>
+            <>
+              <CalendarOutlined className="task-item__due-icon shrink-0" />
+              <span className="truncate">{gridDueDateLabel}</span>
+            </>
           )}
         </div>
       )}
@@ -506,9 +332,9 @@ export default function TaskItem({ task, variant, selected, onSelect }: Props) {
           }}
           icon={
             isImportant ? (
-              <StarFilled className="task-item__star-icon is-important text-[var(--danger)]" />
+              <StarFilled className="task-item__star-icon is-important" />
             ) : (
-              <StarOutlined className="task-item__star-icon text-[var(--text-secondary)]" />
+              <StarOutlined className="task-item__star-icon" />
             )
           }
         />

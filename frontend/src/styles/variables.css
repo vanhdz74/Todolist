@@ -11,11 +11,14 @@
 
   /* Background */
 
+  --bg-header: #2564cf;
   --bg-app: #f3f2f1;
   --bg-surface: #ffffff;
   --bg-sidebar: #ffffff;
   --bg-hover: #f5f5f5;
   --bg-selected: #e1dfdd;
+  --sidebar-hover: #f5f9ff;
+  --sidebar-selected: #eaf3ff;
   --bg-input: #ffffff;
   --bg-danger-soft: #fde7e9;
   --bg-drop: #edf4ff;
@@ -51,12 +54,16 @@
 .dark {
   --bg-app: #1f1f1f;
 
+  --bg-header: #172335;
+
   --bg-surface: #252525;
 
   --bg-sidebar: #202020;
 
   --bg-hover: #333333;
   --bg-selected: #3b3a39;
+  --sidebar-hover: #22344d;
+  --sidebar-selected: #1e3a5f;
   --bg-input: #2b2b2b;
   --bg-danger-soft: #442326;
   --bg-drop: #24364f;

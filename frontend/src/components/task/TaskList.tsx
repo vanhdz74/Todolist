@@ -8,6 +8,7 @@ type Props = {
   loading: boolean;
   groups?: TaskSectionGroup[];
   selectedTaskId?: number;
+  emptyDescription?: React.ReactNode;
   onSelectTask: (task: Task) => void;
 };
 
@@ -16,6 +17,7 @@ export default function TaskList({
   loading,
   groups,
   selectedTaskId,
+  emptyDescription,
   onSelectTask,
 }: Props) {
   return (
@@ -26,6 +28,7 @@ export default function TaskList({
         variant="list"
         groups={groups}
         selectedTaskId={selectedTaskId}
+        emptyDescription={emptyDescription}
         onSelectTask={onSelectTask}
       />
     </div>

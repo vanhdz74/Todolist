@@ -4,6 +4,7 @@ import createSagaMiddleware from "redux-saga";
 
 import taskReducer from "@/redux/task/taskSlice";
 import listReducer from "@/redux/list/listSlice";
+import uiReducer from "@/redux/ui/uiSlice";
 
 import rootSaga from "./rootSaga";
 
@@ -14,6 +15,7 @@ export const store = configureStore({
   reducer: {
     task: taskReducer,
     list: listReducer,
+    ui: uiReducer,
   },
 
   middleware: (getDefaultMiddleware) =>

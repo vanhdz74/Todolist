@@ -3,6 +3,7 @@ import type { SagaIterator } from "redux-saga";
 import type { AxiosResponse } from "axios";
 
 import { taskApi } from "@/services/task.api";
+import { getErrorMessage } from "@/utils/error";
 
 import type {
   CreateTaskResponse,
@@ -31,12 +32,6 @@ import {
   removeTaskSuccess,
   removeTaskFailure,
 } from "./taskSlice";
-
-const getErrorMessage = (error: unknown) => {
-  if (error instanceof Error) return error.message;
-
-  return "Có lỗi xảy ra";
-};
 
 const groupByTaskId = <Item extends { taskId: number }>(items: Item[]) => {
   return items.reduce<Record<number, Item[]>>((result, item) => {
@@ -195,13 +190,20 @@ function* updateTaskSaga(
 function* removeTaskSaga(
   action: ReturnType<typeof removeTaskRequest>,
 ): SagaIterator {
-  try {
-    const id = action.payload;
+  const id = action.payload;
 
+  try {
     yield call(taskApi.remove, id);
 
     yield put(removeTaskSuccess(id));
   } catch (error) {
+    try {
+      yield call(taskApi.getById, id);
+    } catch {
+      yield put(removeTaskSuccess(id));
+      return;
+    }
+
     yield put(removeTaskFailure(getErrorMessage(error)));
   }
 }

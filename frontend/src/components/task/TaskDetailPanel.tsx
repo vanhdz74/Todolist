@@ -1,6 +1,7 @@
 import {
   BellOutlined,
   CalendarOutlined,
+  CheckOutlined,
   CloseOutlined,
   DeleteOutlined,
   LoginOutlined,
@@ -17,19 +18,40 @@ import {
   Checkbox,
   DatePicker,
   Divider,
+  Dropdown,
   Input,
+  Modal,
   Select,
   Space,
   Tag,
 } from "antd";
+import type { MenuProps } from "antd";
 import dayjs from "dayjs";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import "./TaskDetailPanel.css";
+import {
+  cx,
+  fixedCategories,
+  formatCreatedDate,
+  formatModifiedDate,
+  formatReminderDisplay,
+  isTaskOverdue,
+  repeatOptions,
+} from "@/features/tasks";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
-import { removeTaskRequest, updateTaskRequest } from "@/redux/task/taskSlice";
+import {
+  getTaskDetailRequest,
+  removeTaskRequest,
+  updateTaskRequest,
+} from "@/redux/task/taskSlice";
 import { taskApi } from "@/services/task.api";
-import type { Task, TaskCategory, TaskStep } from "@/types/task";
+import type {
+  Task,
+  TaskAttachment,
+  TaskCategory,
+  TaskStep,
+} from "@/types/task";
 
 type Props = {
   task: Task | null;
@@ -41,31 +63,9 @@ type ContentProps = {
   onClose: () => void;
 };
 
-const categoryColors = ["blue", "green", "volcano", "purple"];
-
-const repeatOptions = [
-  { label: "Does not repeat", value: "NONE" },
-  { label: "Daily", value: "DAILY" },
-  { label: "Weekdays", value: "WEEKDAYS" },
-  { label: "Weekly", value: "WEEKLY" },
-  { label: "Monthly", value: "MONTHLY" },
-];
-
-const formatCreatedDate = (value?: string) => {
-  if (!value) return "Created recently";
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Created recently";
-
-  return `Created ${new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(date)}`;
-};
-
 const TaskDetailPanelContent = ({ task, onClose }: ContentProps) => {
   const dispatch = useAppDispatch();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [title, setTitle] = useState(task.title ?? "");
   const [steps, setSteps] = useState<TaskStep[]>(task.steps ?? []);
@@ -77,16 +77,9 @@ const TaskDetailPanelContent = ({ task, onClose }: ContentProps) => {
     task.categories ?? [],
   );
   const [allCategories, setAllCategories] = useState<TaskCategory[]>([]);
-
-  useEffect(() => {
-    setTitle(task.title ?? "");
-    setSteps(task.steps ?? []);
-    setNote(task.description ?? "");
-    setInMyDay(task.myDay);
-    setPriority(task.priority);
-    setCategories(task.categories ?? []);
-    setStepTitle("");
-  }, [task]);
+  const [attachments, setAttachments] = useState<TaskAttachment[]>(
+    task.attachments ?? [],
+  );
 
   useEffect(() => {
     let mounted = true;
@@ -103,10 +96,19 @@ const TaskDetailPanelContent = ({ task, onClose }: ContentProps) => {
   }, []);
 
   const isImportant = priority === "HIGH";
+  const dueDateOverdue = isTaskOverdue(task);
 
   const createdLabel = useMemo(
     () => formatCreatedDate(task.createdAt),
     [task.createdAt],
+  );
+  const modifiedLabel = useMemo(
+    () => formatModifiedDate(task.updatedAt),
+    [task.updatedAt],
+  );
+  const reminderDisplay = useMemo(
+    () => formatReminderDisplay(task.reminderDate),
+    [task.reminderDate],
   );
 
   const updateTask = (data: Partial<Task>) => {
@@ -119,6 +121,17 @@ const TaskDetailPanelContent = ({ task, onClose }: ContentProps) => {
         },
       }),
     );
+  };
+
+  const refreshTaskDetail = () => {
+    dispatch(getTaskDetailRequest(task.id));
+  };
+
+  const touchTask = async () => {
+    await taskApi.update(task.id, {
+      updatedAt: new Date().toISOString(),
+    });
+    refreshTaskDetail();
   };
 
   const handleAddStep = async () => {
@@ -134,6 +147,7 @@ const TaskDetailPanelContent = ({ task, onClose }: ContentProps) => {
 
     setSteps((current) => [...current, response.data]);
     setStepTitle("");
+    await touchTask();
   };
 
   const handleToggleStep = async (step: TaskStep, completed: boolean) => {
@@ -142,11 +156,43 @@ const TaskDetailPanelContent = ({ task, onClose }: ContentProps) => {
     setSteps((current) =>
       current.map((item) => (item.id === step.id ? response.data : item)),
     );
+    await touchTask();
   };
 
-  const handleRemoveStep = async (stepId: number) => {
-    await taskApi.removeStep(stepId);
+  const removeStep = async (stepId: number) => {
+    const previousSteps = steps;
+
     setSteps((current) => current.filter((item) => item.id !== stepId));
+
+    try {
+      await taskApi.removeStep(stepId);
+      await touchTask();
+    } catch {
+      try {
+        const response = await taskApi.getSteps({ taskId: task.id });
+        const stillExists = response.data.some((step) => step.id === stepId);
+
+        if (stillExists) {
+          setSteps(previousSteps);
+          return;
+        }
+
+        await touchTask();
+      } catch {
+        setSteps(previousSteps);
+      }
+    }
+  };
+
+  const handleRemoveStep = (step: TaskStep) => {
+    Modal.confirm({
+      title: "Delete this step?",
+      content: step.title,
+      okText: "Delete",
+      okButtonProps: { danger: true },
+      cancelText: "Cancel",
+      onOk: () => removeStep(step.id),
+    });
   };
 
   const handleUpdateTitle = () => {
@@ -180,74 +226,250 @@ const TaskDetailPanelContent = ({ task, onClose }: ContentProps) => {
     updateTask({ myDay: nextInMyDay });
   };
 
-  const handleAddCategory = async () => {
-    const linkedCategoryIds = new Set(categories.map((category) => category.id));
-    const nextCategory = allCategories.find(
-      (category) => !linkedCategoryIds.has(category.id),
+  const removeCategory = async (category: TaskCategory) => {
+    const previousCategories = categories;
+    let linkId = category.linkId;
+
+    setCategories((current) =>
+      current.filter((item) => item.id !== category.id),
     );
 
-    if (!nextCategory) return;
+    try {
+      if (!linkId) {
+        const response = await taskApi.getTaskCategories({
+          taskId: task.id,
+          categoryId: category.id,
+        });
 
-    const response = await taskApi.createTaskCategory({
+        linkId = response.data[0]?.id;
+      }
+
+      if (linkId) {
+        await taskApi.removeTaskCategory(linkId);
+      }
+
+      await touchTask();
+    } catch {
+      try {
+        const response = await taskApi.getTaskCategories({
+          taskId: task.id,
+          categoryId: category.id,
+        });
+        const stillExists = response.data.some((link) => link.id === linkId);
+
+        if (stillExists) {
+          setCategories(previousCategories);
+          return;
+        }
+
+        await touchTask();
+      } catch {
+        setCategories(previousCategories);
+      }
+    }
+  };
+
+  const handleRemoveCategory = (category: TaskCategory) => {
+    Modal.confirm({
+      title: "Remove this category?",
+      content: category.name,
+      okText: "Remove",
+      okButtonProps: { danger: true },
+      cancelText: "Cancel",
+      onOk: () => removeCategory(category),
+    });
+  };
+
+  const handleToggleFixedCategory = async (
+    option: (typeof fixedCategories)[number],
+  ) => {
+    const linkedCategory = categories.find(
+      (category) =>
+        category.name === option.name || category.color === option.color,
+    );
+
+    if (linkedCategory) {
+      await removeCategory(linkedCategory);
+      return;
+    }
+
+    let category = allCategories.find(
+      (item) => item.name === option.name || item.color === option.color,
+    );
+
+    if (!category) {
+      const response = await taskApi.createCategory({
+        name: option.name,
+        color: option.color,
+        userId: task.userId,
+      });
+
+      category = response.data;
+      setAllCategories((current) => [...current, response.data]);
+    }
+
+    const linkResponse = await taskApi.createTaskCategory({
       taskId: task.id,
-      categoryId: nextCategory.id,
+      categoryId: category.id,
     });
 
     setCategories((current) => [
       ...current,
-      { ...nextCategory, linkId: response.data.id },
+      { ...category, linkId: linkResponse.data.id },
     ]);
+    await touchTask();
   };
 
-  const handleRemoveCategory = async (category: TaskCategory) => {
-    if (!category.linkId) return;
+  const handleAddFiles = async (files: FileList | null) => {
+    if (!files?.length) return;
 
-    await taskApi.removeTaskCategory(category.linkId);
-    setCategories((current) =>
-      current.filter((item) => item.id !== category.id),
+    const now = new Date().toISOString();
+    const responses = await Promise.all(
+      Array.from(files).map((file) =>
+        taskApi.createAttachment({
+          taskId: task.id,
+          name: file.name,
+          url: `/uploads/${encodeURIComponent(file.name)}`,
+          type: file.type || "application/octet-stream",
+          size: file.size,
+          createdAt: now,
+        }),
+      ),
     );
+
+    setAttachments((current) => [
+      ...current,
+      ...responses.map((response) => response.data),
+    ]);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+    await touchTask();
   };
+
+  const removeAttachment = async (attachmentId: number) => {
+    const previousAttachments = attachments;
+
+    setAttachments((current) =>
+      current.filter((attachment) => attachment.id !== attachmentId),
+    );
+
+    try {
+      await taskApi.removeAttachment(attachmentId);
+      await touchTask();
+    } catch {
+      try {
+        const response = await taskApi.getAttachments({ taskId: task.id });
+        const stillExists = response.data.some(
+          (attachment) => attachment.id === attachmentId,
+        );
+
+        if (stillExists) {
+          setAttachments(previousAttachments);
+          return;
+        }
+
+        await touchTask();
+      } catch {
+        setAttachments(previousAttachments);
+      }
+    }
+  };
+
+  const handleRemoveAttachment = (attachment: TaskAttachment) => {
+    Modal.confirm({
+      title: "Delete this file?",
+      content: attachment.name,
+      okText: "Delete",
+      okButtonProps: { danger: true },
+      cancelText: "Cancel",
+      onOk: () => removeAttachment(attachment.id),
+    });
+  };
+
+  const categoryMenuItems: MenuProps["items"] = fixedCategories.map(
+    (option) => {
+      const checked = categories.some(
+        (category) =>
+          category.name === option.name || category.color === option.color,
+      );
+
+      return {
+        key: option.color,
+        label: (
+          <span className="task-detail-category-option">
+            <span
+              className="task-detail-category-dot"
+              style={{ backgroundColor: option.swatch }}
+            />
+            <span>{option.name}</span>
+            {checked && <CheckOutlined />}
+          </span>
+        ),
+        onClick: () => handleToggleFixedCategory(option),
+      };
+    },
+  );
 
   const handleDeleteTask = () => {
-    dispatch(removeTaskRequest(task.id));
-    onClose();
+    Modal.confirm({
+      title: "Delete this task?",
+      content: task.title,
+      okText: "Delete",
+      okButtonProps: { danger: true },
+      cancelText: "Cancel",
+      onOk: () => {
+        dispatch(removeTaskRequest(task.id));
+        onClose();
+      },
+    });
   };
 
   return (
     <div className="task-detail-panel__inner">
+      {/* Header panel */}
+      <div className="task-detail-panel__header">
+        <div className="task-detail-title-row">
+          <Checkbox
+            checked={task.completed}
+            onChange={(event) =>
+              updateTask({ completed: event.target.checked })
+            }
+          />
+
+          <Input
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+            onBlur={handleUpdateTitle}
+            onKeyDown={(event) => {
+              if (event.key !== "Enter" || event.shiftKey) return;
+
+              event.preventDefault();
+              handleUpdateTitle();
+              event.currentTarget.blur();
+            }}
+            bordered={false}
+            className="task-detail-title-input"
+          />
+
+          <Button
+            type="text"
+            className="task-detail-star-button"
+            icon={
+              isImportant ? (
+                <StarFilled className="task-detail-star-icon is-important" />
+              ) : (
+                <StarOutlined className="task-detail-star-icon" />
+              )
+            }
+            onClick={handleToggleImportant}
+          />
+        </div>
+      </div>
+
+      {/* Chi tiết 1 task */}
       <div className="task-detail-panel__body">
         <section className="task-detail-card task-detail-card--main">
-          <div className="task-detail-title-row">
-            <Checkbox
-              checked={task.completed}
-              onChange={(event) =>
-                updateTask({ completed: event.target.checked })
-              }
-            />
-
-            <Input
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-              onBlur={handleUpdateTitle}
-              onPressEnter={handleUpdateTitle}
-              bordered={false}
-              className="task-detail-title-input"
-            />
-
-            <Button
-              type="text"
-              className="task-detail-star-button"
-              icon={
-                isImportant ? (
-                  <StarFilled className="task-detail-star-icon is-important" />
-                ) : (
-                  <StarOutlined className="task-detail-star-icon" />
-                )
-              }
-              onClick={handleToggleImportant}
-            />
-          </div>
-
           <div className="task-detail-add-step">
             <PlusOutlined className="task-detail-add-step__icon" />
 
@@ -283,7 +505,7 @@ const TaskDetailPanelContent = ({ task, onClose }: ContentProps) => {
                 type="text"
                 size="small"
                 icon={<CloseOutlined />}
-                onClick={() => handleRemoveStep(step.id)}
+                onClick={() => handleRemoveStep(step)}
               />
             </div>
           ))}
@@ -303,24 +525,39 @@ const TaskDetailPanelContent = ({ task, onClose }: ContentProps) => {
         <section className="task-detail-card">
           <div className="task-detail-action task-detail-action--field">
             <BellOutlined />
-            <DatePicker
-              showTime={{ format: "HH:mm" }}
-              format="MMM D, YYYY HH:mm"
-              value={task.reminderDate ? dayjs(task.reminderDate) : null}
-              bordered={false}
-              placeholder="Remind me"
-              className="task-detail-date-picker"
-              onChange={(value) =>
-                updateTask({
-                  reminderDate: value ? value.toDate().toISOString() : null,
-                })
-              }
-            />
+            <div className="task-detail-reminder-field">
+              <DatePicker
+                showTime={{ format: "HH:mm" }}
+                format="MMM D, YYYY HH:mm"
+                value={task.reminderDate ? dayjs(task.reminderDate) : null}
+                bordered={false}
+                placeholder="Remind me"
+                className="task-detail-date-picker task-detail-date-picker--overlay"
+                onChange={(value) =>
+                  updateTask({
+                    reminderDate: value ? value.toDate().toISOString() : null,
+                  })
+                }
+                suffixIcon={null}
+              />
+
+              <div className="task-detail-reminder-copy">
+                <span>{reminderDisplay.title}</span>
+                {reminderDisplay.subtitle && (
+                  <small>{reminderDisplay.subtitle}</small>
+                )}
+              </div>
+            </div>
           </div>
 
           <Divider className="task-detail-divider" />
 
-          <div className="task-detail-action task-detail-action--field">
+          <div
+            className={cx(
+              "task-detail-action task-detail-action--field",
+              dueDateOverdue && "is-overdue",
+            )}
+          >
             <CalendarOutlined />
 
             <DatePicker
@@ -334,6 +571,7 @@ const TaskDetailPanelContent = ({ task, onClose }: ContentProps) => {
                   dueDate: value ? value.toDate().toISOString() : null,
                 })
               }
+              suffixIcon={null}
             />
           </div>
 
@@ -355,42 +593,65 @@ const TaskDetailPanelContent = ({ task, onClose }: ContentProps) => {
           <div className="task-detail-action task-detail-action--wrap">
             <TagOutlined className="task-detail-action__icon" />
 
-            <Space size={[6, 6]} wrap>
-              {categories.map((category, index) => (
-                <Tag
-                  key={category.id}
-                  color={
-                    category.color ??
-                    categoryColors[index % categoryColors.length]
-                  }
-                  closable
-                  onClose={(event) => {
-                    event.preventDefault();
-                    handleRemoveCategory(category);
-                  }}
-                >
-                  {category.name}
-                </Tag>
-              ))}
+            <div className="task-detail-category-manager">
+              <Space size={[6, 6]} wrap>
+                {categories.map((category, index) => (
+                  <Tag
+                    key={category.id}
+                    color={category.color ?? fixedCategories[index]?.color}
+                    closable
+                    onClose={(event) => {
+                      event.preventDefault();
+                      handleRemoveCategory(category);
+                    }}
+                  >
+                    {category.name}
+                  </Tag>
+                ))}
+              </Space>
 
-              <Button
-                size="small"
-                type="text"
-                icon={<PlusOutlined />}
-                disabled={categories.length >= allCategories.length}
-                onClick={handleAddCategory}
+              <Dropdown
+                trigger={["click"]}
+                overlayClassName="task-detail-category-dropdown"
+                menu={{ items: categoryMenuItems }}
               >
-                Category
-              </Button>
-            </Space>
+                <Button size="small" type="text" icon={<PlusOutlined />}>
+                  Category
+                </Button>
+              </Dropdown>
+            </div>
           </div>
         </section>
 
         <section className="task-detail-card">
-          <button className="task-detail-action" type="button">
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            hidden
+            onChange={(event) => handleAddFiles(event.target.files)}
+          />
+          <button
+            className="task-detail-action"
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+          >
             <PaperClipOutlined />
             <span>Add file</span>
           </button>
+
+          {attachments.map((attachment) => (
+            <div className="task-detail-attachment" key={attachment.id}>
+              <PaperClipOutlined />
+              <span title={attachment.name}>{attachment.name}</span>
+              <Button
+                size="small"
+                type="text"
+                icon={<CloseOutlined />}
+                onClick={() => handleRemoveAttachment(attachment)}
+              />
+            </div>
+          ))}
         </section>
 
         <section className="task-detail-card">
@@ -403,6 +664,7 @@ const TaskDetailPanelContent = ({ task, onClose }: ContentProps) => {
             autoSize={{ minRows: 4, maxRows: 8 }}
             className="task-detail-note"
           />
+          <div className="task-detail-note-updated">{modifiedLabel}</div>
         </section>
       </div>
 
@@ -425,10 +687,24 @@ const TaskDetailPanelContent = ({ task, onClose }: ContentProps) => {
 };
 
 export default function TaskDetailPanel({ task, onClose }: Props) {
+  const panelContentKey = task
+    ? [
+        task.id,
+        task.updatedAt,
+        task.steps?.length ?? 0,
+        task.categories?.length ?? 0,
+        task.attachments?.length ?? 0,
+      ].join("-")
+    : "empty";
+
   return (
     <aside className={`task-detail-panel ${task ? "is-open" : ""}`}>
       {task && (
-        <TaskDetailPanelContent key={task.id} task={task} onClose={onClose} />
+        <TaskDetailPanelContent
+          key={panelContentKey}
+          task={task}
+          onClose={onClose}
+        />
       )}
     </aside>
   );

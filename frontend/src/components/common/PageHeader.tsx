@@ -40,7 +40,7 @@ export default function PageHeader({
           </div>
 
           <h2
-            className="m-0 flex items-center gap-1.5 text-2xl"
+            className="m-0 flex items-center gap-1.5 text-2xl text-[var(--text-main)]"
             style={titleStyle}
           >
             {title}

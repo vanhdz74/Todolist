@@ -70,6 +70,7 @@
   background: var(--bg-app);
   border: 1px solid var(--border);
   border-radius: 4px;
+  cursor: pointer;
 }
 
 .task-suggestion-item + .task-suggestion-item {
@@ -79,6 +80,13 @@
 .task-suggestion-item:hover {
   background: var(--bg-hover);
   border-color: var(--border-strong);
+}
+
+.task-suggestion-item:focus-visible {
+  background: var(--bg-hover);
+  border-color: var(--primary);
+  outline: 1px solid var(--primary);
+  outline-offset: -1px;
 }
 
 .task-suggestion-item__check {

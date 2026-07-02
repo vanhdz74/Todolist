@@ -11,19 +11,50 @@ import {
   FolderOpenOutlined,
   MoreOutlined,
   PrinterOutlined,
+  ShareAltOutlined,
   SwapOutlined,
 } from "@ant-design/icons";
-import { Button, Dropdown, Input, Modal } from "antd";
+import {
+  Avatar,
+  Button,
+  ConfigProvider,
+  Dropdown,
+  Input,
+  Modal,
+  message,
+} from "antd";
 import type { MenuProps } from "antd";
+import { useUser } from "@clerk/clerk-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import PageHeader from "@/components/common/PageHeader";
 import AddTaskBox from "@/components/task/AddTaskBox/AddTaskBox";
 import type { AddTaskOptions } from "@/components/task/AddTaskBox/addTaskTypes";
+import {
+  applyFilter,
+  buildMenuItems,
+  filterLabels,
+  getDefaultSortBy,
+  getDueDateGroup,
+  getImportanceGroup,
+  getReminderDate,
+  getRepeatValue,
+  getSortPreference,
+  getStoredTasksPageThemeColor,
+  groupLabels,
+  setSortPreference,
+  setStoredTasksPageThemeColor,
+  sortIndicatorLabels,
+  sortLabels,
+  sortTasks,
+  toIsoAtLocalTime,
+} from "@/features/tasks";
+import type { FilterKey, GroupInfo, GroupKey, SortKey } from "@/features/tasks";
 import TaskDetailPanel from "@/components/task/TaskDetailPanel";
 import TaskGrid from "@/components/task/TaskGrid";
 import TaskList from "@/components/task/TaskList";
+import TaskSearchResults from "@/components/task/TaskSearchResults";
 import TaskSuggestionsPanel from "@/components/task/TaskSuggestionsPanel";
 import type { TaskSectionGroup } from "@/components/task/TaskSections";
 import {
@@ -37,6 +68,7 @@ import { CURRENT_USER_ID } from "@/constants/user";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { useAppSelector } from "@/hooks/useAppSelector";
 import { selectListGroups, selectLists } from "@/redux/list/listSelector";
+import { selectSearchQuery } from "@/redux/ui/uiSelector";
 import { removeListRequest, updateListRequest } from "@/redux/list/listSlice";
 import {
   selectLoaded,
@@ -53,6 +85,8 @@ import {
   updateTaskRequest,
 } from "@/redux/task/taskSlice";
 import type { Task } from "@/types/task";
+import { listShareApi } from "@/services/list.api";
+import type { ListShareOwner, ListShareResponse } from "@/types/list";
 
 import "./TaskCollectionPage.css";
 
@@ -60,300 +94,48 @@ type Props = {
   list: TodoListConfig;
 };
 
-type SortKey = "importance" | "dueDate" | "alphabetical" | "createdAt";
-type GroupKey = "none" | "dueDate" | "importance" | "list";
-type FilterKey =
-  | "all"
-  | "active"
-  | "completed"
-  | "important"
-  | "planned"
-  | "assigned"
-  | "myDay"
-  | "reminder"
-  | "repeating";
+// css chung cho list item
+const listOptionsMenuClassName = `
+  [&_.ant-dropdown-menu-item]:!h-9
+  [&_.ant-dropdown-menu-submenu-title]:!h-9
 
-type GroupInfo = {
-  key: string;
-  title: string;
-  order: number;
-};
+  [&_.ant-dropdown-menu-item]:!items-center
+  [&_.ant-dropdown-menu-submenu-title]:!items-center
 
-const sortLabels: Record<SortKey, string> = {
-  importance: "Importance",
-  dueDate: "Due date",
-  alphabetical: "Alphabetically",
-  createdAt: "Creation date",
-};
+  [&_.ant-dropdown-menu-item-icon]:!m-0
+  [&_.ant-dropdown-menu-item-icon]:!w-4
+  [&_.ant-dropdown-menu-item-icon]:!min-w-4
+  [&_.ant-dropdown-menu-item-icon]:!text-center
 
-const sortIndicatorLabels: Record<SortKey, string> = {
-  importance: "importance",
-  dueDate: "due date",
-  alphabetical: "alphabetically",
-  createdAt: "creation date",
-};
+  [&_.ant-dropdown-menu-title-content]:!ml-3
 
-const getDefaultSortBy = (list: TodoListConfig): SortKey => {
-  return list.key === "planned" ? "dueDate" : "createdAt";
-};
+  [&_.ant-dropdown-menu-submenu-expand-icon]:!ml-auto
+`;
 
-type SortPreference = {
-  sortBy: SortKey;
-  indicatorVisible: boolean;
-};
-
-const sortPreferences = new Map<TodoListConfig["key"], SortPreference>();
-
-const getSortPreference = (list: TodoListConfig): SortPreference => {
+const getInitials = (value: string) => {
   return (
-    sortPreferences.get(list.key) ?? {
-      sortBy: getDefaultSortBy(list),
-      indicatorVisible: false,
-    }
+    value
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((part) => part[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || "U"
   );
 };
 
-const setSortPreference = (
-  list: TodoListConfig,
-  preference: SortPreference,
-) => {
-  sortPreferences.set(list.key, preference);
-};
-
-const groupLabels: Record<GroupKey, string> = {
-  none: "None",
-  dueDate: "Due date",
-  importance: "Importance",
-  list: "List",
-};
-
-const filterLabels: Record<FilterKey, string> = {
-  all: "All tasks",
-  active: "Active",
-  completed: "Completed",
-  important: "Important",
-  planned: "Planned",
-  assigned: "Assigned to me",
-  myDay: "My Day",
-  reminder: "Has reminder",
-  repeating: "Repeating",
-};
-
-const priorityOrder: Record<Task["priority"], number> = {
-  HIGH: 0,
-  MEDIUM: 1,
-  LOW: 2,
-};
-
-const parseDate = (value?: string | null) => {
-  if (!value) return null;
-
-  const date = new Date(value);
-
-  return Number.isNaN(date.getTime()) ? null : date;
-};
-
-const startOfDay = (date: Date) => {
-  const result = new Date(date);
-  result.setHours(0, 0, 0, 0);
-
-  return result;
-};
-
-const isSameDay = (first: Date, second: Date) => {
-  return (
-    first.getFullYear() === second.getFullYear() &&
-    first.getMonth() === second.getMonth() &&
-    first.getDate() === second.getDate()
-  );
-};
-
-const toIsoAtLocalTime = (
-  dateValue: string | null | undefined,
-  hours: number,
-  minutes = 0,
-) => {
-  if (!dateValue) return null;
-
-  const date = new Date(dateValue);
-  if (Number.isNaN(date.getTime())) return null;
-
-  date.setHours(hours, minutes, 0, 0);
-
-  return date.toISOString();
-};
-
-const getReminderDate = (value: string | null | undefined) => {
-  if (!value) return null;
-
-  const today = startOfDay(new Date());
-
-  if (value === "later-today") {
-    const reminderDate = new Date(today);
-    reminderDate.setHours(18, 0, 0, 0);
-
-    return reminderDate.toISOString();
+const createFallbackInviteCode = () => {
+  if (crypto.randomUUID) {
+    return crypto.randomUUID().replaceAll("-", "").slice(0, 16);
   }
 
-  if (value === "tomorrow-morning") {
-    const reminderDate = new Date(today);
-    reminderDate.setDate(reminderDate.getDate() + 1);
-    reminderDate.setHours(9, 0, 0, 0);
-
-    return reminderDate.toISOString();
-  }
-
-  if (value === "next-week") {
-    const reminderDate = new Date(today);
-    reminderDate.setDate(reminderDate.getDate() + 7);
-    reminderDate.setHours(9, 0, 0, 0);
-
-    return reminderDate.toISOString();
-  }
-
-  const customReminderDate = new Date(value.replace(" ", "T"));
-
-  return Number.isNaN(customReminderDate.getTime())
-    ? null
-    : customReminderDate.toISOString();
-};
-
-const getRepeatValue = (value: string | null | undefined): Task["repeat"] => {
-  if (!value) return "NONE";
-
-  if (value.startsWith("every-")) {
-    return value.toUpperCase().replaceAll("-", "_");
-  }
-
-  const repeatMap: Record<string, Task["repeat"]> = {
-    daily: "DAILY",
-    weekdays: "WEEKDAYS",
-    weekly: "WEEKLY",
-    monthly: "MONTHLY",
-  };
-
-  return repeatMap[value] ?? "NONE";
-};
-
-const compareCreatedDesc = (first: Task, second: Task) => {
-  return (
-    (parseDate(second.createdAt)?.getTime() ?? 0) -
-    (parseDate(first.createdAt)?.getTime() ?? 0)
-  );
-};
-
-const applyFilter = (task: Task, filterBy: FilterKey) => {
-  switch (filterBy) {
-    case "active":
-      return !task.completed;
-    case "completed":
-      return task.completed;
-    case "important":
-      return task.priority === "HIGH";
-    case "planned":
-      return Boolean(task.dueDate);
-    case "assigned":
-      return task.assignedTo === CURRENT_USER_ID;
-    case "myDay":
-      return task.myDay;
-    case "reminder":
-      return Boolean(task.reminderDate);
-    case "repeating":
-      return task.repeat !== "NONE";
-    case "all":
-    default:
-      return true;
-  }
-};
-
-const sortTasks = (tasks: Task[], sortBy: SortKey) => {
-  return [...tasks].sort((first, second) => {
-    switch (sortBy) {
-      case "importance": {
-        const priorityDiff =
-          priorityOrder[first.priority] - priorityOrder[second.priority];
-
-        return priorityDiff || compareCreatedDesc(first, second);
-      }
-
-      case "dueDate": {
-        const firstDate =
-          parseDate(first.dueDate)?.getTime() ?? Number.MAX_SAFE_INTEGER;
-        const secondDate =
-          parseDate(second.dueDate)?.getTime() ?? Number.MAX_SAFE_INTEGER;
-
-        return firstDate - secondDate || compareCreatedDesc(first, second);
-      }
-
-      case "alphabetical":
-        return (
-          first.title.localeCompare(second.title, undefined, {
-            sensitivity: "base",
-          }) || compareCreatedDesc(first, second)
-        );
-
-      case "createdAt":
-      default:
-        return compareCreatedDesc(first, second);
-    }
-  });
-};
-
-const getDueDateGroup = (task: Task): GroupInfo => {
-  const dueDate = parseDate(task.dueDate);
-
-  if (!dueDate) {
-    return { key: "no-date", title: "No date", order: 4 };
-  }
-
-  const today = startOfDay(new Date());
-  const taskDay = startOfDay(dueDate);
-  const tomorrow = new Date(today);
-  tomorrow.setDate(today.getDate() + 1);
-
-  if (taskDay < today) return { key: "earlier", title: "Earlier", order: 0 };
-  if (isSameDay(taskDay, today)) {
-    return { key: "today", title: "Today", order: 1 };
-  }
-  if (isSameDay(taskDay, tomorrow)) {
-    return { key: "tomorrow", title: "Tomorrow", order: 2 };
-  }
-
-  return { key: "later", title: "Later", order: 3 };
-};
-
-const getImportanceGroup = (task: Task): GroupInfo => {
-  const labels: Record<Task["priority"], string> = {
-    HIGH: "Important",
-    MEDIUM: "Medium",
-    LOW: "Not important",
-  };
-
-  return {
-    key: task.priority,
-    title: labels[task.priority],
-    order: priorityOrder[task.priority],
-  };
-};
-
-const buildMenuItems = <Key extends string>(
-  labels: Record<Key, string>,
-  selectedKey: Key,
-) => {
-  return (Object.keys(labels) as Key[]).map((key) => ({
-    key,
-    label: (
-      <span className="task-command-menu__item">
-        <span>{labels[key]}</span>
-        {selectedKey === key && <CheckOutlined />}
-      </span>
-    ),
-  }));
+  return Math.random().toString(36).slice(2, 18);
 };
 
 export default function TaskCollectionPage({ list }: Props) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const { user } = useUser();
 
   const tasks = useAppSelector((state) => selectTasksByList(state, list));
   const allTasks = useAppSelector(selectTasks);
@@ -362,6 +144,7 @@ export default function TaskCollectionPage({ list }: Props) {
   const listGroups = useAppSelector(selectListGroups);
   const loading = useAppSelector(selectLoading);
   const loaded = useAppSelector(selectLoaded);
+  const searchQuery = useAppSelector(selectSearchQuery);
 
   const [viewMode, setViewMode] = useState<ViewMode>(list.defaultView);
   const [sortBy, setSortBy] = useState<SortKey>(
@@ -379,12 +162,32 @@ export default function TaskCollectionPage({ list }: Props) {
   const [filterBy, setFilterBy] = useState<FilterKey>("all");
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
+  const [selectedTaskListKey, setSelectedTaskListKey] = useState<
+    TodoListConfig["key"] | null
+  >(null);
   const [renameOpen, setRenameOpen] = useState(false);
   const [renameValue, setRenameValue] = useState(list.title);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shareLoading, setShareLoading] = useState(false);
+  const [shareData, setShareData] = useState<ListShareResponse | null>(null);
+  const [tasksPageThemeColor, setTasksPageThemeColor] = useState(
+    getStoredTasksPageThemeColor,
+  );
 
   const listNameById = useMemo(() => {
     return new Map(lists.map((item) => [item.id, item.name]));
   }, [lists]);
+  const currentShareOwner = useMemo<ListShareOwner>(() => {
+    const email = user?.primaryEmailAddress?.emailAddress ?? "";
+    const name = user?.fullName || email || "You";
+
+    return {
+      id: user?.id ?? CURRENT_USER_ID,
+      name,
+      email,
+      initials: getInitials(name),
+    };
+  }, [user]);
   const customListId =
     list.group === "custom" ? Number(list.key.replace("list-", "")) : null;
   const currentList =
@@ -480,8 +283,8 @@ export default function TaskCollectionPage({ list }: Props) {
         dueDate: toIsoAtLocalTime(options?.dueDate, 23, 59),
         reminderDate: getReminderDate(options?.reminder),
         repeat: getRepeatValue(options?.repeat),
-        assignedTo: list.key === "assigned" ? CURRENT_USER_ID : null,
-        listId,
+        assignedTo: list.key === "assigned" ? CURRENT_USER_ID : undefined,
+        listId: listId ?? undefined,
         userId: CURRENT_USER_ID,
         createdAt: now,
         updatedAt: now,
@@ -492,12 +295,14 @@ export default function TaskCollectionPage({ list }: Props) {
   const handleSelectTask = (task: Task) => {
     setSuggestionsOpen(false);
     setSelectedTaskId(task.id);
+    setSelectedTaskListKey(list.key);
     dispatch(selectTask(task));
     dispatch(getTaskDetailRequest(task.id));
   };
 
   const handleOpenSuggestions = () => {
     setSelectedTaskId(null);
+    setSelectedTaskListKey(null);
     setSuggestionsOpen((current) => !current);
   };
 
@@ -546,7 +351,7 @@ export default function TaskCollectionPage({ list }: Props) {
       updateListRequest({
         id: currentList.id,
         data: {
-          groupId,
+          groupId: groupId ?? undefined,
           position: targetLists.length + 1,
           updatedAt: new Date().toISOString(),
         },
@@ -568,6 +373,10 @@ export default function TaskCollectionPage({ list }: Props) {
     );
   };
 
+  const changeTasksPageTheme = (theme: ListThemeKey) => {
+    setTasksPageThemeColor(setStoredTasksPageThemeColor(theme));
+  };
+
   const handleDeleteList = () => {
     if (!currentList) return;
 
@@ -584,6 +393,62 @@ export default function TaskCollectionPage({ list }: Props) {
     });
   };
 
+  const openShareDialog = async () => {
+    if (!currentList) return;
+
+    setShareOpen(true);
+    setShareLoading(true);
+    setShareData(null);
+
+    try {
+      const response = await listShareApi.getOrCreate(currentList.id, {
+        origin: window.location.origin,
+        owner: currentShareOwner,
+      });
+
+      setShareData(response.data);
+    } catch {
+      const now = new Date().toISOString();
+      const code = createFallbackInviteCode();
+
+      setShareData({
+        id: -currentList.id,
+        listId: currentList.id,
+        code,
+        inviteUrl: `${window.location.origin}/tasks/sharing?invite=${code}`,
+        createdBy: CURRENT_USER_ID,
+        createdAt: now,
+        updatedAt: now,
+        owner: currentShareOwner,
+      });
+      message.warning("Using a local invite link because the API is unavailable");
+    } finally {
+      setShareLoading(false);
+    }
+  };
+
+  const copyShareLink = async () => {
+    if (!shareData) return;
+
+    try {
+      await navigator.clipboard.writeText(shareData.inviteUrl);
+      message.success("Invite link copied");
+    } catch {
+      message.error("Could not copy invite link");
+    }
+  };
+
+  const inviteViaEmail = () => {
+    if (!shareData || !currentList) return;
+
+    const subject = encodeURIComponent(`Join my list: ${currentList.name}`);
+    const body = encodeURIComponent(
+      `Use this invite link to join and edit "${currentList.name}":\n\n${shareData.inviteUrl}`,
+    );
+
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+  };
+
   const sortMenuItems = useMemo(
     () => buildMenuItems(sortLabels, sortBy),
     [sortBy],
@@ -596,8 +461,28 @@ export default function TaskCollectionPage({ list }: Props) {
     () => buildMenuItems(filterLabels, filterBy),
     [filterBy],
   );
+  const isTasksPage = list.key === "tasks";
+  const isThemeablePage = list.group === "custom" || isTasksPage;
   const listThemeColor = currentList?.color ?? DEFAULT_LIST_COLOR;
-  const selectedListTheme = getListThemeKeyByColor(listThemeColor);
+  const pageThemeColor = isTasksPage ? tasksPageThemeColor : listThemeColor;
+  const selectedListTheme = getListThemeKeyByColor(pageThemeColor);
+  const themeMenuItems = (Object.keys(listThemes) as ListThemeKey[]).map(
+    (theme) => ({
+      key: `theme-${theme}`,
+      label: (
+        <span className="list-options-menu__theme">
+          <span
+            className="list-options-menu__swatch"
+            style={{ backgroundColor: listThemes[theme].color }}
+          />
+          {listThemes[theme].label}
+          {selectedListTheme === theme && <CheckOutlined />}
+        </span>
+      ),
+      onClick: () =>
+        isTasksPage ? changeTasksPageTheme(theme) : changeListTheme(theme),
+    }),
+  );
   const moveGroupItems: NonNullable<MenuProps["items"]> = currentList
     ? [
         {
@@ -636,22 +521,7 @@ export default function TaskCollectionPage({ list }: Props) {
           key: "theme",
           icon: <BgColorsOutlined />,
           label: "Change theme",
-          children: (Object.keys(listThemes) as ListThemeKey[]).map(
-            (theme) => ({
-              key: `theme-${theme}`,
-              label: (
-                <span className="list-options-menu__theme">
-                  <span
-                    className="list-options-menu__swatch"
-                    style={{ backgroundColor: listThemes[theme].color }}
-                  />
-                  {listThemes[theme].label}
-                  {selectedListTheme === theme && <CheckOutlined />}
-                </span>
-              ),
-              onClick: () => changeListTheme(theme),
-            }),
-          ),
+          children: themeMenuItems,
         },
         {
           key: "move",
@@ -675,6 +545,26 @@ export default function TaskCollectionPage({ list }: Props) {
         },
       ]
     : [];
+  const taskPageOptionsItems: MenuProps["items"] = [
+    {
+      key: "heading",
+      label: <span className="list-options-menu__heading">Task options</span>,
+      disabled: true,
+    },
+    { type: "divider" },
+    {
+      key: "theme",
+      icon: <BgColorsOutlined />,
+      label: "Change theme",
+      children: themeMenuItems,
+    },
+    {
+      key: "print",
+      icon: <PrinterOutlined />,
+      label: "Print list",
+      onClick: () => window.print(),
+    },
+  ];
 
   const sortMenu: MenuProps = {
     items: sortMenuItems,
@@ -703,19 +593,35 @@ export default function TaskCollectionPage({ list }: Props) {
     selectedKeys: [filterBy],
     selectable: true,
   };
-  const showGroupAction = list.key !== "important";
-  const showFilterAction = list.key !== "my-day" && list.key !== "important";
-  const customListAccentStyle =
-    list.group === "custom"
-      ? ({
-          "--primary": listThemeColor,
-          "--primary-hover": listThemeColor,
-        } as React.CSSProperties)
-      : undefined;
+  const hideCommandActions = ["planned", "assigned"].includes(list.key);
+  const showSortAction = !hideCommandActions;
+  const showGroupAction = !hideCommandActions && list.key !== "important";
+  const showFilterAction =
+    !hideCommandActions && !["my-day", "important"].includes(list.key);
+  const pageAccentStyle = isThemeablePage
+    ? ({
+        "--primary": pageThemeColor,
+        "--primary-hover": pageThemeColor,
+      } as React.CSSProperties)
+    : undefined;
+  const pageAntTheme = useMemo(
+    () => ({
+      token: {
+        colorPrimary: pageThemeColor,
+        colorPrimaryActive: pageThemeColor,
+        colorPrimaryHover: pageThemeColor,
+        colorWhite: "#ffffff",
+      },
+    }),
+    [pageThemeColor],
+  );
   const titleActions =
     currentList && list.group === "custom" ? (
       <Dropdown
-        menu={{ items: listOptionsItems }}
+        menu={{
+          items: listOptionsItems,
+          className: listOptionsMenuClassName,
+        }}
         trigger={["click"]}
         overlayClassName="list-options-menu"
       >
@@ -726,165 +632,277 @@ export default function TaskCollectionPage({ list }: Props) {
           icon={<MoreOutlined />}
         />
       </Dropdown>
+    ) : isTasksPage ? (
+      <Dropdown
+        menu={{ items: taskPageOptionsItems }}
+        trigger={["click"]}
+        overlayClassName="list-options-menu"
+      >
+        <Button
+          type="text"
+          className="list-options-trigger"
+          aria-label="Open task options"
+          icon={<MoreOutlined />}
+        />
+      </Dropdown>
     ) : undefined;
+  const activeSelectedTaskId =
+    selectedTaskListKey === list.key ? selectedTaskId : null;
+  const activeSelectedTask =
+    selectedTaskListKey === list.key ? selectedTask : null;
+  const trimmedSearchQuery = searchQuery.trim();
+  const isSearching = trimmedSearchQuery.length > 0;
 
   return (
-    <div
-      className="task-collection-page flex h-full min-h-0 flex-col overflow-hidden"
-      style={customListAccentStyle}
-    >
-      <div className="flex min-h-0 flex-1 overflow-hidden">
-        <main className="flex min-w-0 flex-1 flex-col overflow-hidden px-6 pt-1">
-          <PageHeader
-            icon={list.icon}
-            iconClassName={list.group === "custom" ? "" : list.accentClassName}
-            iconStyle={
-              list.group === "custom" ? { color: listThemeColor } : undefined
-            }
-            titleStyle={
-              list.group === "custom" ? { color: listThemeColor } : undefined
-            }
-            title={list.title}
-            subtitle={list.subtitle}
-            viewMode={viewMode}
-            setViewMode={setViewMode}
-            titleActions={titleActions}
-            actions={
-              <>
-                <Dropdown menu={sortMenu} trigger={["click"]}>
-                  <Button
-                    type="text"
-                    className="task-command-button"
-                    icon={<SwapOutlined />}
-                  >
-                    Sort
-                  </Button>
-                </Dropdown>
-
-                {showGroupAction && (
-                  <Dropdown menu={groupMenu} trigger={["click"]}>
-                    <Button
-                      type="text"
-                      className="task-command-button"
-                      icon={<AppstoreAddOutlined />}
-                    >
-                      Group
-                    </Button>
-                  </Dropdown>
-                )}
-
-                {showFilterAction && (
-                  <Dropdown menu={filterMenu} trigger={["click"]}>
-                    <Button
-                      type="text"
-                      icon={<FilterOutlined />}
-                      className={[
-                        "task-command-button",
-                        filterBy !== "all" ? "is-filtered" : "",
-                      ].join(" ")}
-                    >
-                      Filter
-                    </Button>
-                  </Dropdown>
-                )}
-
-                {list.key === "my-day" && (
-                  <Button
-                    type="text"
-                    icon={<BulbOutlined />}
-                    onClick={handleOpenSuggestions}
-                    className={[
-                      "task-command-button",
-                      suggestionsOpen ? "is-filtered" : "",
-                    ].join(" ")}
-                  >
-                    Suggestions
-                  </Button>
-                )}
-              </>
-            }
-          />
-
-          {sortIndicatorVisible && (
-            <div className="task-sort-indicator" aria-live="polite">
-              <DownOutlined className="task-sort-indicator__chevron" />
-              <span>Sorted by {sortIndicatorLabels[sortBy]}</span>
-              <Button
-                type="text"
-                size="small"
-                aria-label="Clear sorting"
-                icon={<CloseOutlined />}
-                onClick={() => {
-                  const defaultSortBy = getDefaultSortBy(list);
-
-                  setSortBy(defaultSortBy);
-                  setSortIndicatorVisible(false);
-                  setSortPreference(list, {
-                    sortBy: defaultSortBy,
-                    indicatorVisible: false,
-                  });
-                }}
-              />
-            </div>
-          )}
-
-          <Modal
-            title="Rename list"
-            open={renameOpen}
-            okText="Rename"
-            destroyOnHidden
-            onCancel={() => setRenameOpen(false)}
-            onOk={handleRenameList}
-          >
-            <Input
-              autoFocus
-              value={renameValue}
-              onChange={(event) => setRenameValue(event.target.value)}
-              onPressEnter={handleRenameList}
-            />
-          </Modal>
-
-          <div className="shrink-0">
-            <AddTaskBox onAdd={handleAddTask} />
-          </div>
-
-          <div className="min-h-0 flex-1 overflow-hidden pb-6">
-            {viewMode === "grid" ? (
-              <TaskGrid
-                data={visibleTasks}
+    <ConfigProvider theme={pageAntTheme}>
+      <div
+        className="task-collection-page flex h-full min-h-0 flex-col overflow-hidden"
+        style={pageAccentStyle}
+      >
+        <div className="flex min-h-0 flex-1 overflow-hidden">
+          <main className="flex min-w-0 flex-1 flex-col overflow-hidden px-6 pt-1">
+            {isSearching ? (
+              <TaskSearchResults
+                query={trimmedSearchQuery}
+                tasks={allTasks}
+                listNameById={listNameById}
                 loading={loading}
-                groups={taskGroups}
-                selectedTaskId={selectedTaskId ?? undefined}
+                selectedTaskId={activeSelectedTaskId ?? undefined}
                 onSelectTask={handleSelectTask}
               />
             ) : (
-              <TaskList
-                data={visibleTasks}
-                loading={loading}
-                groups={taskGroups}
-                selectedTaskId={selectedTaskId ?? undefined}
-                onSelectTask={handleSelectTask}
-              />
+              <>
+                <PageHeader
+                  icon={list.icon}
+                  iconClassName={isThemeablePage ? "" : list.accentClassName}
+                  iconStyle={
+                    isThemeablePage ? { color: pageThemeColor } : undefined
+                  }
+                  titleStyle={
+                    isThemeablePage ? { color: pageThemeColor } : undefined
+                  }
+                  title={list.title}
+                  subtitle={list.subtitle}
+                  viewMode={viewMode}
+                  setViewMode={setViewMode}
+                  titleActions={titleActions}
+                  actions={
+                    <>
+                      {showSortAction && (
+                        <Dropdown menu={sortMenu} trigger={["click"]}>
+                          <Button
+                            type="text"
+                            className="task-command-button"
+                            icon={<SwapOutlined />}
+                          >
+                            Sort
+                          </Button>
+                        </Dropdown>
+                      )}
+
+                      {showGroupAction && (
+                        <Dropdown menu={groupMenu} trigger={["click"]}>
+                          <Button
+                            type="text"
+                            className="task-command-button"
+                            icon={<AppstoreAddOutlined />}
+                          >
+                            Group
+                          </Button>
+                        </Dropdown>
+                      )}
+
+                      {showFilterAction && (
+                        <Dropdown menu={filterMenu} trigger={["click"]}>
+                          <Button
+                            type="text"
+                            icon={<FilterOutlined />}
+                            className={[
+                              "task-command-button",
+                              filterBy !== "all" ? "is-filtered" : "",
+                            ].join(" ")}
+                          >
+                            Filter
+                          </Button>
+                        </Dropdown>
+                      )}
+
+                      {list.key === "my-day" && (
+                        <Button
+                          type="text"
+                          icon={<BulbOutlined />}
+                          onClick={handleOpenSuggestions}
+                          className={[
+                            "task-command-button",
+                            suggestionsOpen ? "is-filtered" : "",
+                          ].join(" ")}
+                        >
+                          Suggestions
+                        </Button>
+                      )}
+
+                      {currentList && list.group === "custom" && (
+                        <Button
+                          type="text"
+                          icon={<ShareAltOutlined />}
+                          onClick={openShareDialog}
+                          className="task-command-button"
+                        >
+                          Share
+                        </Button>
+                      )}
+                    </>
+                  }
+                />
+
+                {showSortAction && sortIndicatorVisible && (
+                  <div className="task-sort-indicator" aria-live="polite">
+                    <DownOutlined className="task-sort-indicator__chevron" />
+                    <span>Sorted by {sortIndicatorLabels[sortBy]}</span>
+                    <Button
+                      type="text"
+                      size="small"
+                      aria-label="Clear sorting"
+                      icon={<CloseOutlined />}
+                      onClick={() => {
+                        const defaultSortBy = getDefaultSortBy(list);
+
+                        setSortBy(defaultSortBy);
+                        setSortIndicatorVisible(false);
+                        setSortPreference(list, {
+                          sortBy: defaultSortBy,
+                          indicatorVisible: false,
+                        });
+                      }}
+                    />
+                  </div>
+                )}
+              </>
             )}
-          </div>
-        </main>
 
-        <TaskDetailPanel
-          task={selectedTask}
-          onClose={() => {
-            setSelectedTaskId(null);
-            dispatch(selectTask(null));
-          }}
-        />
+            <Modal
+              title="Rename list"
+              open={renameOpen}
+              okText="Rename"
+              destroyOnHidden
+              onCancel={() => setRenameOpen(false)}
+              onOk={handleRenameList}
+            >
+              <Input
+                autoFocus
+                value={renameValue}
+                onChange={(event) => setRenameValue(event.target.value)}
+                onPressEnter={handleRenameList}
+              />
+            </Modal>
 
-        <TaskSuggestionsPanel
-          open={list.key === "my-day" && suggestionsOpen}
-          tasks={allTasks}
-          lists={lists}
-          onClose={() => setSuggestionsOpen(false)}
-          onAddToMyDay={handleAddSuggestionToMyDay}
-        />
+            <Modal
+              title="Share list"
+              open={shareOpen}
+              footer={null}
+              width={352}
+              destroyOnHidden
+              className="share-list-modal"
+              onCancel={() => setShareOpen(false)}
+            >
+              <div className="share-list-modal__content">
+                <div className="share-list-modal__section-title">
+                  List members
+                </div>
+
+                <div className="share-list-modal__member">
+                  <Avatar className="share-list-modal__avatar">
+                    {(shareData?.owner ?? currentShareOwner).initials}
+                  </Avatar>
+
+                  <div className="share-list-modal__member-name">
+                    {(shareData?.owner ?? currentShareOwner).name}
+                  </div>
+
+                  <div className="share-list-modal__role">Owner</div>
+                </div>
+
+                <Input
+                  readOnly
+                  value={shareData?.inviteUrl ?? ""}
+                  placeholder={shareLoading ? "Creating invite link..." : ""}
+                  className="share-list-modal__link"
+                />
+
+                <div className="share-list-modal__actions">
+                  <Button
+                    type="primary"
+                    disabled={!shareData}
+                    loading={shareLoading}
+                    onClick={inviteViaEmail}
+                  >
+                    Invite via email
+                  </Button>
+
+                  <Button disabled={!shareData} onClick={copyShareLink}>
+                    Copy link
+                  </Button>
+                </div>
+
+                <p className="share-list-modal__hint">
+                  Anyone with this link and an account can join and edit this
+                  list.
+                </p>
+
+                <Button type="link" className="share-list-modal__manage">
+                  Manage access
+                </Button>
+              </div>
+            </Modal>
+
+            {!isSearching && (
+              <>
+                <div className="shrink-0">
+                  <AddTaskBox onAdd={handleAddTask} />
+                </div>
+
+                <div className="min-h-0 flex-1 overflow-hidden pb-6">
+                  {viewMode === "grid" ? (
+                    <TaskGrid
+                      data={visibleTasks}
+                      loading={loading}
+                      groups={taskGroups}
+                      selectedTaskId={activeSelectedTaskId ?? undefined}
+                      onSelectTask={handleSelectTask}
+                    />
+                  ) : (
+                    <TaskList
+                      data={visibleTasks}
+                      loading={loading}
+                      groups={taskGroups}
+                      selectedTaskId={activeSelectedTaskId ?? undefined}
+                      onSelectTask={handleSelectTask}
+                    />
+                  )}
+                </div>
+              </>
+            )}
+          </main>
+
+          <TaskDetailPanel
+            task={activeSelectedTask}
+            onClose={() => {
+              setSelectedTaskId(null);
+              setSelectedTaskListKey(null);
+              dispatch(selectTask(null));
+            }}
+          />
+
+          <TaskSuggestionsPanel
+            open={!isSearching && list.key === "my-day" && suggestionsOpen}
+            tasks={allTasks}
+            lists={lists}
+            onClose={() => setSuggestionsOpen(false)}
+            onSelectTask={handleSelectTask}
+            onAddToMyDay={handleAddSuggestionToMyDay}
+          />
+        </div>
       </div>
-    </div>
+    </ConfigProvider>
   );
 }

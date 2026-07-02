@@ -16,8 +16,8 @@ export interface Task {
   dueDate: string | null;
   reminderDate: string | null;
   repeat: TaskRepeat;
-  assignedTo: number | null;
-  listId: number | null;
+  assignedTo?: number | null;
+  listId?: number | null;
   createdAt: string;
   updatedAt: string;
   userId: number;
@@ -82,3 +82,9 @@ export type CreateTaskStepRequest = Omit<TaskStep, "id">;
 export type UpdateTaskStepRequest = Partial<CreateTaskStepRequest>;
 
 export type CreateTaskCategoryLinkRequest = Omit<TaskCategoryLink, "id">;
+
+export type CreateTaskCategoryRequest = Omit<TaskCategory, "id" | "linkId">;
+
+export type UpdateTaskCategoryRequest = Partial<CreateTaskCategoryRequest>;
+
+export type CreateTaskAttachmentRequest = Omit<TaskAttachment, "id">;

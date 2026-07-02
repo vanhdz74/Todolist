@@ -9,6 +9,7 @@ type Props = {
   loading: boolean;
   groups?: TaskSectionGroup[];
   selectedTaskId?: number;
+  emptyDescription?: React.ReactNode;
   onSelectTask: (task: Task) => void;
 };
 
@@ -17,6 +18,7 @@ export default function TaskGrid({
   loading,
   groups,
   selectedTaskId,
+  emptyDescription,
   onSelectTask,
 }: Props) {
   return (
@@ -36,6 +38,7 @@ export default function TaskGrid({
           variant="grid"
           groups={groups}
           selectedTaskId={selectedTaskId}
+          emptyDescription={emptyDescription}
           onSelectTask={onSelectTask}
         />
       </div>

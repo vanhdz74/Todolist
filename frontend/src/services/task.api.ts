@@ -2,7 +2,9 @@ import { api } from "./axios";
 
 import type {
   CreateTaskRequest,
+  CreateTaskAttachmentRequest,
   CreateTaskCategoryLinkRequest,
+  CreateTaskCategoryRequest,
   CreateTaskResponse,
   CreateTaskStepRequest,
   GetTasksRequest,
@@ -12,6 +14,7 @@ import type {
   TaskCategoryLink,
   TaskStep,
   UpdateTaskStepRequest,
+  UpdateTaskCategoryRequest,
   UpdateTaskRequest,
   UpdateTaskResponse,
 } from "@/types/task";
@@ -51,6 +54,18 @@ export const taskApi = {
     return api.get<TaskCategory[]>("/categories");
   },
 
+  createCategory(data: CreateTaskCategoryRequest) {
+    return api.post<TaskCategory>("/categories", data);
+  },
+
+  updateCategory(id: number, data: UpdateTaskCategoryRequest) {
+    return api.patch<TaskCategory>(`/categories/${id}`, data);
+  },
+
+  removeCategory(id: number) {
+    return api.delete<void>(`/categories/${id}`);
+  },
+
   getTaskCategories(params?: Partial<TaskCategoryLink>) {
     return api.get<TaskCategoryLink[]>("/taskCategories", {
       params,
@@ -69,6 +84,14 @@ export const taskApi = {
     return api.get<TaskAttachment[]>("/attachments", {
       params,
     });
+  },
+
+  createAttachment(data: CreateTaskAttachmentRequest) {
+    return api.post<TaskAttachment>("/attachments", data);
+  },
+
+  removeAttachment(id: number) {
+    return api.delete<void>(`/attachments/${id}`);
   },
 
   create(data: CreateTaskRequest) {

@@ -41,7 +41,7 @@ export default function Sidebar() {
           <SidebarMenu collapsed={collapsed} />
         </div>
 
-        <SidebarFooter />
+        <SidebarFooter collapsed={collapsed} />
       </div>
     </Sider>
   );

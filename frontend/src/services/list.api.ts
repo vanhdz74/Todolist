@@ -14,8 +14,11 @@ import type {
   UpdateListGroupResponse,
   UpdateListRequest,
   UpdateListResponse,
+  ListShareRequest,
+  ListShareResponse,
 } from "@/types/list";
 
+// Call api vs axios
 export const listApi = {
   getAll(params?: GetListsRequest) {
     return api.get<GetListsResponse>("/lists", {
@@ -40,11 +43,16 @@ export const listApi = {
   },
 };
 
+// Các api CRUD vs group
 export const listGroupApi = {
   getAll(params?: GetListGroupsRequest) {
     return api.get<GetListGroupsResponse>("/listGroups", {
       params,
     });
+  },
+
+  getById(id: number) {
+    return api.get<UpdateListGroupResponse>(`/listGroups/${id}`);
   },
 
   create(data: CreateListGroupRequest) {
@@ -57,5 +65,12 @@ export const listGroupApi = {
 
   remove(id: number) {
     return api.delete<void>(`/listGroups/${id}`);
+  },
+};
+
+// Share link mời
+export const listShareApi = {
+  getOrCreate(listId: number, data: ListShareRequest) {
+    return api.post<ListShareResponse>(`/lists/${listId}/share`, data);
   },
 };

@@ -3,9 +3,13 @@ import {
   GithubOutlined,
   LinkedinOutlined,
   MailOutlined,
-  SettingOutlined,
 } from "@ant-design/icons";
+
 import { Button, Tooltip } from "antd";
+
+type Props = {
+  collapsed: boolean;
+};
 
 const contacts = [
   {
@@ -34,31 +38,95 @@ const contacts = [
   },
 ];
 
-export default function SidebarFooter() {
+export default function SidebarFooter({ collapsed }: Props) {
   return (
-    <div className="flex h-14 items-center justify-center gap-1 border-t border-[var(--border)] px-2">
-      {contacts.map((contact) => (
-        <Tooltip key={contact.key} title={contact.label}>
-          <Button
-            type="text"
-            size="small"
-            icon={contact.icon}
-            href={contact.href}
-            target="_blank"
-            rel="noreferrer"
-            className="!flex !h-8 !w-8 !items-center !justify-center !rounded-md !text-[var(--text-secondary)] hover:!bg-[var(--bg-hover)] hover:!text-[var(--accent)]"
-          />
-        </Tooltip>
-      ))}
+    <div
+      className={`
+        border-t
+        border-(--border)
+        transition-all
+        duration-200
 
-      <Tooltip title="Settings">
-        <Button
-          type="text"
-          size="small"
-          icon={<SettingOutlined />}
-          className="flex! !h-8 !w-8 !items-center !justify-center !rounded-md !text-[var(--text-secondary)] hover:!bg-[var(--bg-hover)] hover:!text-[var(--accent)]"
-        />
-      </Tooltip>
+        ${
+          collapsed
+            ? `
+              px-2!
+              py-3!
+            `
+            : `
+              px-4!
+              py-3!
+            `
+        }
+      `}
+    >
+      {!collapsed && (
+        <p
+          className="
+            mb-2!
+            px-1!
+            text-[11px]
+            font-semibold
+            uppercase
+            tracking-wide
+            text-(--text-secondary)
+          "
+        >
+          Connect
+        </p>
+      )}
+
+      <div
+        className={`
+          ${
+            collapsed
+              ? `
+                grid
+                grid-cols-2
+                gap-2
+                justify-items-center
+              `
+              : `
+                flex
+                items-center
+                justify-between
+                gap-2
+              `
+          }
+        `}
+      >
+        {contacts.map((contact) => (
+          <Tooltip key={contact.key} title={contact.label} placement="top">
+            <Button
+              type="text"
+              size="small"
+              icon={contact.icon}
+              href={contact.href}
+              target="_blank"
+              rel="noreferrer"
+              className="
+                flex!
+                h-9!
+                w-9!
+                items-center!
+                justify-center!
+                rounded-xl!
+                text-(--text-secondary)!
+                transition-all!
+
+                hover:bg-(--bg-hover)!
+                hover:text-(--primary)!
+
+                focus:bg-(--bg-hover)!
+                focus:text-(--primary)!
+
+                focus-visible:bg-(--bg-hover)!
+                focus-visible:text-(--primary)!
+              "
+            />
+          </Tooltip>
+        ))}
+      </div>
     </div>
   );
 }

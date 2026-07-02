@@ -10,22 +10,24 @@ type Props = {
 export default function SidebarHeader({ collapsed, setCollapsed }: Props) {
   return (
     <div
-      className="
-      h-14
-      flex
-      items-center
-      justify-between
-      px-8!
-      border-b
-      border-(--border)
-      "
+      className={`
+        h-14
+        flex
+        items-center
+        px-4!
+        border-b
+        border-(--border)
+
+        ${collapsed ? "justify-center" : "justify-between"}
+      `}
     >
       {!collapsed && (
         <span
           className="
-          font-semibold
-          text-lg
-          text-(--text-main)
+            font-semibold
+            text-lg
+            text-(--text-main)
+            ml-4!
           "
         ></span>
       )}
@@ -34,6 +36,14 @@ export default function SidebarHeader({ collapsed, setCollapsed }: Props) {
         type="text"
         icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
         onClick={() => setCollapsed(!collapsed)}
+        className="
+          flex!
+          items-center!
+          justify-center!
+          text-(--text-main)!
+          hover:bg-(--bg-hover)!
+          focus:bg-(--bg-hover)!
+        "
       />
     </div>
   );

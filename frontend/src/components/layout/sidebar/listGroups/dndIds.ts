@@ -3,6 +3,8 @@ export const UNGROUPED_KEY = "ungrouped";
 export const getGroupDropId = (groupId: number | null) =>
   `group-${groupId === null ? UNGROUPED_KEY : groupId}`;
 
+export const getGroupDragId = (groupId: number) => `group-drag-${groupId}`;
+
 export const getListDragId = (listId: number) => `list-${listId}`;
 
 export const parseListDragId = (value: string) => {
@@ -21,6 +23,14 @@ export const parseGroupDropId = (value: string) => {
   if (groupKey === UNGROUPED_KEY) return null;
 
   const id = Number(groupKey);
+
+  return Number.isNaN(id) ? null : id;
+};
+
+export const parseGroupDragId = (value: string) => {
+  if (!value.startsWith("group-drag-")) return null;
+
+  const id = Number(value.replace("group-drag-", ""));
 
   return Number.isNaN(id) ? null : id;
 };

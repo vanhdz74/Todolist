@@ -1,8 +1,9 @@
-import { call, put, takeLatest } from "redux-saga/effects";
+import { call, put, takeEvery, takeLatest } from "redux-saga/effects";
 import type { SagaIterator } from "redux-saga";
 import type { AxiosResponse } from "axios";
 
 import { listApi, listGroupApi } from "@/services/list.api";
+import { getErrorMessage } from "@/utils/error";
 
 import type {
   CreateListGroupResponse,
@@ -43,12 +44,6 @@ import {
   updateListRequest,
   updateListSuccess,
 } from "./listSlice";
-
-const getErrorMessage = (error: unknown) => {
-  if (error instanceof Error) return error.message;
-
-  return "Có lỗi xảy ra";
-};
 
 function* getListsSaga(
   action: ReturnType<typeof getListsRequest>,
@@ -116,13 +111,20 @@ function* updateListSaga(
 function* removeListSaga(
   action: ReturnType<typeof removeListRequest>,
 ): SagaIterator {
-  try {
-    const id = action.payload;
+  const id = action.payload;
 
+  try {
     yield call(listApi.remove, id);
 
     yield put(removeListSuccess(id));
   } catch (error) {
+    try {
+      yield call(listApi.getById, id);
+    } catch {
+      yield put(removeListSuccess(id));
+      return;
+    }
+
     yield put(removeListFailure(getErrorMessage(error)));
   }
 }
@@ -178,13 +180,20 @@ function* updateListGroupSaga(
 function* removeListGroupSaga(
   action: ReturnType<typeof removeListGroupRequest>,
 ): SagaIterator {
-  try {
-    const id = action.payload;
+  const id = action.payload;
 
+  try {
     yield call(listGroupApi.remove, id);
 
     yield put(removeListGroupSuccess(id));
   } catch (error) {
+    try {
+      yield call(listGroupApi.getById, id);
+    } catch {
+      yield put(removeListGroupSuccess(id));
+      return;
+    }
+
     yield put(removeListGroupFailure(getErrorMessage(error)));
   }
 }
@@ -193,10 +202,10 @@ export function* watchListSaga() {
   yield takeLatest(getListsRequest.type, getListsSaga);
   yield takeLatest(getListDetailRequest.type, getListDetailSaga);
   yield takeLatest(createListRequest.type, createListSaga);
-  yield takeLatest(updateListRequest.type, updateListSaga);
+  yield takeEvery(updateListRequest.type, updateListSaga);
   yield takeLatest(removeListRequest.type, removeListSaga);
   yield takeLatest(getListGroupsRequest.type, getListGroupsSaga);
   yield takeLatest(createListGroupRequest.type, createListGroupSaga);
-  yield takeLatest(updateListGroupRequest.type, updateListGroupSaga);
+  yield takeEvery(updateListGroupRequest.type, updateListGroupSaga);
   yield takeLatest(removeListGroupRequest.type, removeListGroupSaga);
 }
