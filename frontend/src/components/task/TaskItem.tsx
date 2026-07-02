@@ -88,14 +88,25 @@ const formatGridDate = (value?: string | null) => {
 };
 
 const formatRepeat = (value: Task["repeat"]) => {
-  const repeatLabels: Record<Task["repeat"], string> = {
+  const repeatLabels: Record<string, string> = {
     NONE: "",
     DAILY: "Daily",
+    WEEKDAYS: "Weekdays",
     WEEKLY: "Weekly",
     MONTHLY: "Monthly",
   };
 
-  return repeatLabels[value];
+  const customRepeat = value.match(/^EVERY_(\d+)_(DAY|WEEK|MONTH|YEAR)$/);
+
+  if (customRepeat) {
+    const [, every, unit] = customRepeat;
+    const unitText = unit.toLowerCase();
+    const pluralUnitText = Number(every) > 1 ? `${unitText}s` : unitText;
+
+    return `Every ${every} ${pluralUnitText}`;
+  }
+
+  return repeatLabels[value] ?? "";
 };
 
 // Lấy màu để set

@@ -51,6 +51,28 @@ const taskSlice = createSlice({
       state.error = action.payload ?? "Không thể tải danh sách task";
     },
 
+    getTaskDetailRequest(state, action: PayloadAction<number>) {
+      void action;
+      state.error = null;
+    },
+
+    getTaskDetailSuccess(state, action: PayloadAction<Task>) {
+      const index = state.tasks.findIndex((task) => task.id === action.payload.id);
+
+      if (index !== -1) {
+        state.tasks[index] = {
+          ...state.tasks[index],
+          ...action.payload,
+        };
+      }
+
+      state.selectedTask = action.payload;
+    },
+
+    getTaskDetailFailure(state, action: PayloadAction<string | undefined>) {
+      state.error = action.payload ?? "Không thể tải chi tiết task";
+    },
+
     createTaskRequest(state, action: PayloadAction<CreateTaskRequest>) {
       void action;
       state.error = null;
@@ -141,6 +163,10 @@ export const {
   getTasksRequest,
   getTasksSuccess,
   getTasksFailure,
+
+  getTaskDetailRequest,
+  getTaskDetailSuccess,
+  getTaskDetailFailure,
 
   createTaskRequest,
   createTaskSuccess,

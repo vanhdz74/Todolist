@@ -12,13 +12,24 @@ import {
   SunOutlined,
   TagOutlined,
 } from "@ant-design/icons";
-import { Button, Checkbox, DatePicker, Divider, Input, Space, Tag } from "antd";
-import { useMemo, useState } from "react";
+import {
+  Button,
+  Checkbox,
+  DatePicker,
+  Divider,
+  Input,
+  Select,
+  Space,
+  Tag,
+} from "antd";
+import dayjs from "dayjs";
+import { useEffect, useMemo, useState } from "react";
 
 import "./TaskDetailPanel.css";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { removeTaskRequest, updateTaskRequest } from "@/redux/task/taskSlice";
-import type { Task } from "@/types/task";
+import { taskApi } from "@/services/task.api";
+import type { Task, TaskCategory, TaskStep } from "@/types/task";
 
 type Props = {
   task: Task | null;
@@ -31,6 +42,14 @@ type ContentProps = {
 };
 
 const categoryColors = ["blue", "green", "volcano", "purple"];
+
+const repeatOptions = [
+  { label: "Does not repeat", value: "NONE" },
+  { label: "Daily", value: "DAILY" },
+  { label: "Weekdays", value: "WEEKDAYS" },
+  { label: "Weekly", value: "WEEKLY" },
+  { label: "Monthly", value: "MONTHLY" },
+];
 
 const formatCreatedDate = (value?: string) => {
   if (!value) return "Created recently";
@@ -49,15 +68,39 @@ const TaskDetailPanelContent = ({ task, onClose }: ContentProps) => {
   const dispatch = useAppDispatch();
 
   const [title, setTitle] = useState(task.title ?? "");
-  const [steps, setSteps] = useState<string[]>([]);
+  const [steps, setSteps] = useState<TaskStep[]>(task.steps ?? []);
   const [stepTitle, setStepTitle] = useState("");
   const [note, setNote] = useState(task.description ?? "");
   const [inMyDay, setInMyDay] = useState(task.myDay);
   const [priority, setPriority] = useState<Task["priority"]>(task.priority);
-  const [categories, setCategories] = useState<string[]>([
-    "Blue category",
-    "Green category",
-  ]);
+  const [categories, setCategories] = useState<TaskCategory[]>(
+    task.categories ?? [],
+  );
+  const [allCategories, setAllCategories] = useState<TaskCategory[]>([]);
+
+  useEffect(() => {
+    setTitle(task.title ?? "");
+    setSteps(task.steps ?? []);
+    setNote(task.description ?? "");
+    setInMyDay(task.myDay);
+    setPriority(task.priority);
+    setCategories(task.categories ?? []);
+    setStepTitle("");
+  }, [task]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    taskApi.getCategories().then((response) => {
+      if (mounted) {
+        setAllCategories(response.data);
+      }
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const isImportant = priority === "HIGH";
 
@@ -78,12 +121,32 @@ const TaskDetailPanelContent = ({ task, onClose }: ContentProps) => {
     );
   };
 
-  const handleAddStep = () => {
+  const handleAddStep = async () => {
     const value = stepTitle.trim();
     if (!value) return;
 
-    setSteps((current) => [...current, value]);
+    const response = await taskApi.createStep({
+      taskId: task.id,
+      title: value,
+      completed: false,
+      order: steps.length + 1,
+    });
+
+    setSteps((current) => [...current, response.data]);
     setStepTitle("");
+  };
+
+  const handleToggleStep = async (step: TaskStep, completed: boolean) => {
+    const response = await taskApi.updateStep(step.id, { completed });
+
+    setSteps((current) =>
+      current.map((item) => (item.id === step.id ? response.data : item)),
+    );
+  };
+
+  const handleRemoveStep = async (stepId: number) => {
+    await taskApi.removeStep(stepId);
+    setSteps((current) => current.filter((item) => item.id !== stepId));
   };
 
   const handleUpdateTitle = () => {
@@ -115,6 +178,34 @@ const TaskDetailPanelContent = ({ task, onClose }: ContentProps) => {
 
     setInMyDay(nextInMyDay);
     updateTask({ myDay: nextInMyDay });
+  };
+
+  const handleAddCategory = async () => {
+    const linkedCategoryIds = new Set(categories.map((category) => category.id));
+    const nextCategory = allCategories.find(
+      (category) => !linkedCategoryIds.has(category.id),
+    );
+
+    if (!nextCategory) return;
+
+    const response = await taskApi.createTaskCategory({
+      taskId: task.id,
+      categoryId: nextCategory.id,
+    });
+
+    setCategories((current) => [
+      ...current,
+      { ...nextCategory, linkId: response.data.id },
+    ]);
+  };
+
+  const handleRemoveCategory = async (category: TaskCategory) => {
+    if (!category.linkId) return;
+
+    await taskApi.removeTaskCategory(category.linkId);
+    setCategories((current) =>
+      current.filter((item) => item.id !== category.id),
+    );
   };
 
   const handleDeleteTask = () => {
@@ -179,10 +270,21 @@ const TaskDetailPanelContent = ({ task, onClose }: ContentProps) => {
             </Button>
           </div>
 
-          {steps.map((step, index) => (
-            <div className="task-detail-step" key={`${step}-${index}`}>
-              <Checkbox />
-              <span>{step}</span>
+          {steps.map((step) => (
+            <div className="task-detail-step" key={step.id}>
+              <Checkbox
+                checked={step.completed}
+                onChange={(event) =>
+                  handleToggleStep(step, event.target.checked)
+                }
+              />
+              <span>{step.title}</span>
+              <Button
+                type="text"
+                size="small"
+                icon={<CloseOutlined />}
+                onClick={() => handleRemoveStep(step.id)}
+              />
             </div>
           ))}
         </section>
@@ -199,10 +301,22 @@ const TaskDetailPanelContent = ({ task, onClose }: ContentProps) => {
         </section>
 
         <section className="task-detail-card">
-          <button className="task-detail-action" type="button">
+          <div className="task-detail-action task-detail-action--field">
             <BellOutlined />
-            <span>Remind me</span>
-          </button>
+            <DatePicker
+              showTime={{ format: "HH:mm" }}
+              format="MMM D, YYYY HH:mm"
+              value={task.reminderDate ? dayjs(task.reminderDate) : null}
+              bordered={false}
+              placeholder="Remind me"
+              className="task-detail-date-picker"
+              onChange={(value) =>
+                updateTask({
+                  reminderDate: value ? value.toDate().toISOString() : null,
+                })
+              }
+            />
+          </div>
 
           <Divider className="task-detail-divider" />
 
@@ -210,8 +324,10 @@ const TaskDetailPanelContent = ({ task, onClose }: ContentProps) => {
             <CalendarOutlined />
 
             <DatePicker
+              value={task.dueDate ? dayjs(task.dueDate) : null}
               bordered={false}
               placeholder="Add due date"
+              format="MMM D, YYYY"
               className="task-detail-date-picker"
               onChange={(value) =>
                 updateTask({
@@ -223,10 +339,16 @@ const TaskDetailPanelContent = ({ task, onClose }: ContentProps) => {
 
           <Divider className="task-detail-divider" />
 
-          <button className="task-detail-action" type="button">
+          <div className="task-detail-action task-detail-action--field">
             <RetweetOutlined />
-            <span>Repeat</span>
-          </button>
+            <Select
+              variant="borderless"
+              value={task.repeat}
+              options={repeatOptions}
+              className="task-detail-select"
+              onChange={(repeat) => updateTask({ repeat })}
+            />
+          </div>
         </section>
 
         <section className="task-detail-card">
@@ -236,16 +358,18 @@ const TaskDetailPanelContent = ({ task, onClose }: ContentProps) => {
             <Space size={[6, 6]} wrap>
               {categories.map((category, index) => (
                 <Tag
-                  key={category}
-                  color={categoryColors[index % categoryColors.length]}
-                  closable
-                  onClose={() =>
-                    setCategories((current) =>
-                      current.filter((item) => item !== category),
-                    )
+                  key={category.id}
+                  color={
+                    category.color ??
+                    categoryColors[index % categoryColors.length]
                   }
+                  closable
+                  onClose={(event) => {
+                    event.preventDefault();
+                    handleRemoveCategory(category);
+                  }}
                 >
-                  {category}
+                  {category.name}
                 </Tag>
               ))}
 
@@ -253,12 +377,8 @@ const TaskDetailPanelContent = ({ task, onClose }: ContentProps) => {
                 size="small"
                 type="text"
                 icon={<PlusOutlined />}
-                onClick={() =>
-                  setCategories((current) => [
-                    ...current,
-                    `Category ${current.length + 1}`,
-                  ])
-                }
+                disabled={categories.length >= allCategories.length}
+                onClick={handleAddCategory}
               >
                 Category
               </Button>

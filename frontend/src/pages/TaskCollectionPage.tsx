@@ -20,6 +20,7 @@ import { useNavigate } from "react-router-dom";
 
 import PageHeader from "@/components/common/PageHeader";
 import AddTaskBox from "@/components/task/AddTaskBox/AddTaskBox";
+import type { AddTaskOptions } from "@/components/task/AddTaskBox/addTaskTypes";
 import TaskDetailPanel from "@/components/task/TaskDetailPanel";
 import TaskGrid from "@/components/task/TaskGrid";
 import TaskList from "@/components/task/TaskList";
@@ -40,12 +41,15 @@ import { removeListRequest, updateListRequest } from "@/redux/list/listSlice";
 import {
   selectLoaded,
   selectLoading,
+  selectSelectedTask,
   selectTasks,
   selectTasksByList,
 } from "@/redux/task/taskSelector";
 import {
   createTaskRequest,
+  getTaskDetailRequest,
   getTasksRequest,
+  selectTask,
   updateTaskRequest,
 } from "@/redux/task/taskSlice";
 import type { Task } from "@/types/task";
@@ -162,6 +166,73 @@ const isSameDay = (first: Date, second: Date) => {
     first.getMonth() === second.getMonth() &&
     first.getDate() === second.getDate()
   );
+};
+
+const toIsoAtLocalTime = (
+  dateValue: string | null | undefined,
+  hours: number,
+  minutes = 0,
+) => {
+  if (!dateValue) return null;
+
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return null;
+
+  date.setHours(hours, minutes, 0, 0);
+
+  return date.toISOString();
+};
+
+const getReminderDate = (value: string | null | undefined) => {
+  if (!value) return null;
+
+  const today = startOfDay(new Date());
+
+  if (value === "later-today") {
+    const reminderDate = new Date(today);
+    reminderDate.setHours(18, 0, 0, 0);
+
+    return reminderDate.toISOString();
+  }
+
+  if (value === "tomorrow-morning") {
+    const reminderDate = new Date(today);
+    reminderDate.setDate(reminderDate.getDate() + 1);
+    reminderDate.setHours(9, 0, 0, 0);
+
+    return reminderDate.toISOString();
+  }
+
+  if (value === "next-week") {
+    const reminderDate = new Date(today);
+    reminderDate.setDate(reminderDate.getDate() + 7);
+    reminderDate.setHours(9, 0, 0, 0);
+
+    return reminderDate.toISOString();
+  }
+
+  const customReminderDate = new Date(value.replace(" ", "T"));
+
+  return Number.isNaN(customReminderDate.getTime())
+    ? null
+    : customReminderDate.toISOString();
+};
+
+const getRepeatValue = (value: string | null | undefined): Task["repeat"] => {
+  if (!value) return "NONE";
+
+  if (value.startsWith("every-")) {
+    return value.toUpperCase().replaceAll("-", "_");
+  }
+
+  const repeatMap: Record<string, Task["repeat"]> = {
+    daily: "DAILY",
+    weekdays: "WEEKDAYS",
+    weekly: "WEEKLY",
+    monthly: "MONTHLY",
+  };
+
+  return repeatMap[value] ?? "NONE";
 };
 
 const compareCreatedDesc = (first: Task, second: Task) => {
@@ -286,6 +357,7 @@ export default function TaskCollectionPage({ list }: Props) {
 
   const tasks = useAppSelector((state) => selectTasksByList(state, list));
   const allTasks = useAppSelector(selectTasks);
+  const selectedTask = useAppSelector(selectSelectedTask);
   const lists = useAppSelector(selectLists);
   const listGroups = useAppSelector(selectListGroups);
   const loading = useAppSelector(selectLoading);
@@ -331,13 +403,6 @@ export default function TaskCollectionPage({ list }: Props) {
       dispatch(getTasksRequest({ userId: CURRENT_USER_ID }));
     }
   }, [dispatch, loaded]);
-
-  // Chọn bằng cách lọc id task
-  const selectedTask = useMemo(() => {
-    if (selectedTaskId === null) return null;
-
-    return tasks.find((task) => task.id === selectedTaskId) ?? null;
-  }, [tasks, selectedTaskId]);
 
   const visibleTasks = useMemo(() => {
     return sortTasks(
@@ -400,7 +465,7 @@ export default function TaskCollectionPage({ list }: Props) {
   }, [groupBy, listNameById, visibleTasks]);
 
   // Xử lý thêm task
-  const handleAddTask = (title: string) => {
+  const handleAddTask = (title: string, options?: AddTaskOptions) => {
     const now = new Date().toISOString();
     const listId =
       list.group === "custom" ? Number(list.key.replace("list-", "")) : null;
@@ -412,9 +477,9 @@ export default function TaskCollectionPage({ list }: Props) {
         completed: false,
         priority: "LOW",
         myDay: list.key === "my-day",
-        dueDate: null,
-        reminderDate: null,
-        repeat: "NONE",
+        dueDate: toIsoAtLocalTime(options?.dueDate, 23, 59),
+        reminderDate: getReminderDate(options?.reminder),
+        repeat: getRepeatValue(options?.repeat),
         assignedTo: list.key === "assigned" ? CURRENT_USER_ID : null,
         listId,
         userId: CURRENT_USER_ID,
@@ -427,6 +492,8 @@ export default function TaskCollectionPage({ list }: Props) {
   const handleSelectTask = (task: Task) => {
     setSuggestionsOpen(false);
     setSelectedTaskId(task.id);
+    dispatch(selectTask(task));
+    dispatch(getTaskDetailRequest(task.id));
   };
 
   const handleOpenSuggestions = () => {
@@ -804,7 +871,10 @@ export default function TaskCollectionPage({ list }: Props) {
 
         <TaskDetailPanel
           task={selectedTask}
-          onClose={() => setSelectedTaskId(null)}
+          onClose={() => {
+            setSelectedTaskId(null);
+            dispatch(selectTask(null));
+          }}
         />
 
         <TaskSuggestionsPanel

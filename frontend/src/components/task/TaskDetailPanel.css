@@ -51,7 +51,7 @@
   border-top: 1px solid var(--todo-border-strong);
   border-left: 1px solid var(--todo-border-strong);
   box-shadow:
-    -8px 0 24px rgba(0, 0, 0, 0.18),
+    -8px 0 24px rgba(206, 202, 202, 0.18),
     -1px 0 0 rgba(0, 0, 0, 0.08);
 }
 
@@ -313,6 +313,17 @@
 
 .task-detail-action--field .task-detail-date-picker {
   grid-column: 2 / 4;
+}
+
+.task-detail-action--field .task-detail-select {
+  grid-column: 2 / 4;
+  width: 100%;
+}
+
+.task-detail-select .ant-select-selector {
+  padding: 0 !important;
+  color: var(--todo-text);
+  background: transparent !important;
 }
 
 .task-detail-action--wrap {

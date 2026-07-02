@@ -2,13 +2,16 @@ import { api } from "./axios";
 
 import type {
   CreateTaskRequest,
+  CreateTaskCategoryLinkRequest,
   CreateTaskResponse,
+  CreateTaskStepRequest,
   GetTasksRequest,
   GetTasksResponse,
   TaskAttachment,
   TaskCategory,
   TaskCategoryLink,
   TaskStep,
+  UpdateTaskStepRequest,
   UpdateTaskRequest,
   UpdateTaskResponse,
 } from "@/types/task";
@@ -22,20 +25,50 @@ export const taskApi = {
     });
   },
 
-  getSteps() {
-    return api.get<TaskStep[]>("/taskSteps");
+  getById(id: number) {
+    return api.get<UpdateTaskResponse>(`/tasks/${id}`);
+  },
+
+  getSteps(params?: Partial<TaskStep>) {
+    return api.get<TaskStep[]>("/taskSteps", {
+      params,
+    });
+  },
+
+  createStep(data: CreateTaskStepRequest) {
+    return api.post<TaskStep>("/taskSteps", data);
+  },
+
+  updateStep(id: number, data: UpdateTaskStepRequest) {
+    return api.patch<TaskStep>(`/taskSteps/${id}`, data);
+  },
+
+  removeStep(id: number) {
+    return api.delete<void>(`/taskSteps/${id}`);
   },
 
   getCategories() {
     return api.get<TaskCategory[]>("/categories");
   },
 
-  getTaskCategories() {
-    return api.get<TaskCategoryLink[]>("/taskCategories");
+  getTaskCategories(params?: Partial<TaskCategoryLink>) {
+    return api.get<TaskCategoryLink[]>("/taskCategories", {
+      params,
+    });
   },
 
-  getAttachments() {
-    return api.get<TaskAttachment[]>("/attachments");
+  createTaskCategory(data: CreateTaskCategoryLinkRequest) {
+    return api.post<TaskCategoryLink>("/taskCategories", data);
+  },
+
+  removeTaskCategory(id: number) {
+    return api.delete<void>(`/taskCategories/${id}`);
+  },
+
+  getAttachments(params?: Partial<TaskAttachment>) {
+    return api.get<TaskAttachment[]>("/attachments", {
+      params,
+    });
   },
 
   create(data: CreateTaskRequest) {

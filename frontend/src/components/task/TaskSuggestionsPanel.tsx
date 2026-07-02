@@ -77,13 +77,15 @@ const sortByCreatedDesc = (first: Task, second: Task) => {
 };
 
 const sortByDueDate = (first: Task, second: Task) => {
-  const firstTime = parseDate(first.dueDate)?.getTime() ?? Number.MAX_SAFE_INTEGER;
+  const firstTime =
+    parseDate(first.dueDate)?.getTime() ?? Number.MAX_SAFE_INTEGER;
   const secondTime =
     parseDate(second.dueDate)?.getTime() ?? Number.MAX_SAFE_INTEGER;
 
   return firstTime - secondTime;
 };
 
+// Task panel
 export default function TaskSuggestionsPanel({
   open,
   tasks,
@@ -91,6 +93,7 @@ export default function TaskSuggestionsPanel({
   onClose,
   onAddToMyDay,
 }: Props) {
+  // không tạo lại Map mỗi lần component render
   const listNameById = useMemo(() => {
     return new Map(lists.map((list) => [list.id, list.name]));
   }, [lists]);

@@ -18,6 +18,9 @@ import {
   getTasksRequest,
   getTasksSuccess,
   getTasksFailure,
+  getTaskDetailRequest,
+  getTaskDetailSuccess,
+  getTaskDetailFailure,
   createTaskRequest,
   createTaskSuccess,
   createTaskFailure,
@@ -95,6 +98,64 @@ function* getTasksSaga(
   }
 }
 
+// Lấy chi tiết một task khi mở panel
+function* getTaskDetailSaga(
+  action: ReturnType<typeof getTaskDetailRequest>,
+): SagaIterator {
+  try {
+    const taskId = action.payload;
+
+    const [
+      taskResponse,
+      stepsResponse,
+      categoriesResponse,
+      taskCategoriesResponse,
+      attachmentsResponse,
+    ]: [
+      AxiosResponse<UpdateTaskResponse>,
+      AxiosResponse<TaskStep[]>,
+      AxiosResponse<TaskCategory[]>,
+      AxiosResponse<TaskCategoryLink[]>,
+      AxiosResponse<TaskAttachment[]>,
+    ] = yield all([
+      call(taskApi.getById, taskId),
+      call(taskApi.getSteps, { taskId }),
+      call(taskApi.getCategories),
+      call(taskApi.getTaskCategories, { taskId }),
+      call(taskApi.getAttachments, { taskId }),
+    ]);
+
+    const categoryById = new Map(
+      categoriesResponse.data.map((category) => [category.id, category]),
+    );
+    const categories = taskCategoriesResponse.data.reduce<TaskCategory[]>(
+      (result, link) => {
+        const category = categoryById.get(link.categoryId);
+
+        if (category) {
+          result.push({ ...category, linkId: link.id });
+        }
+
+        return result;
+      },
+      [],
+    );
+
+    yield put(
+      getTaskDetailSuccess({
+        ...taskResponse.data,
+        steps: stepsResponse.data.sort(
+          (first, second) => first.order - second.order,
+        ),
+        categories,
+        attachments: attachmentsResponse.data,
+      }),
+    );
+  } catch (error) {
+    yield put(getTaskDetailFailure(getErrorMessage(error)));
+  }
+}
+
 // Tạo task
 function* createTaskSaga(
   action: ReturnType<typeof createTaskRequest>,
@@ -147,6 +208,7 @@ function* removeTaskSaga(
 
 export function* watchTaskSaga() {
   yield takeLatest(getTasksRequest.type, getTasksSaga);
+  yield takeLatest(getTaskDetailRequest.type, getTaskDetailSaga);
   yield takeLatest(createTaskRequest.type, createTaskSaga);
   yield takeEvery(updateTaskRequest.type, updateTaskSaga);
   yield takeLatest(removeTaskRequest.type, removeTaskSaga);

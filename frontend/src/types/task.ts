@@ -1,3 +1,11 @@
+export type TaskRepeat =
+  | "NONE"
+  | "DAILY"
+  | "WEEKDAYS"
+  | "WEEKLY"
+  | "MONTHLY"
+  | string;
+
 export interface Task {
   id: number;
   title: string;
@@ -7,7 +15,7 @@ export interface Task {
   myDay: boolean;
   dueDate: string | null;
   reminderDate: string | null;
-  repeat: "NONE" | "DAILY" | "WEEKLY" | "MONTHLY";
+  repeat: TaskRepeat;
   assignedTo: number | null;
   listId: number | null;
   createdAt: string;
@@ -31,6 +39,7 @@ export interface TaskCategory {
   name: string;
   color: string;
   userId: number;
+  linkId?: number;
 }
 
 export interface TaskCategoryLink {
@@ -67,3 +76,9 @@ export type CreateTaskResponse = Task;
 export type UpdateTaskRequest = Partial<CreateTaskRequest>;
 
 export type UpdateTaskResponse = Task;
+
+export type CreateTaskStepRequest = Omit<TaskStep, "id">;
+
+export type UpdateTaskStepRequest = Partial<CreateTaskStepRequest>;
+
+export type CreateTaskCategoryLinkRequest = Omit<TaskCategoryLink, "id">;
